@@ -1,0 +1,13 @@
+const { hypenToCamelCase } = require('lib/string');
+
+const DomHelpers = {
+  style: (styles) => {
+    const htmlElement = document.createElement('div');
+    Object.keys(styles).forEach((styleKey) => {
+      htmlElement.style[hypenToCamelCase(styleKey)] = styles[styleKey];
+    });
+    return htmlElement;
+  },
+}
+
+module.exports = DomHelpers;

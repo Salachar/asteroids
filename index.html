@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Asteroids</title>
+		<link rel="stylesheet" href="src/css/styles.css"></link>
+	</head>
+
+	<body>
+		<div class="menu">
+      <div class="title">ASTEROIDS</div>
+      <form autocomplete="off">
+
+        <div class="menu-section">
+          <div id="num-objects">Num Objects: <span id="num_objects_counter"></span></div>
+          <div id="fps">FPS: <span id="fps_counter"></span></div>
+        </div>
+
+        <div class="menu-section">
+          <div class="neon-text">Ship</div>
+          <div class="input-wrapper">
+            <input type="radio" name="ship" id="config_ship_sanlo" value="sanlo" checked="checked" />
+            <label for="config_ship_sanlo">Sanlo</label>
+          </div>
+          <div class="input-wrapper">
+            <input type="radio" name="ship" id="config_ship_futurama" value="futurama" />
+            <label for="config_ship_futurama">Futurama</label>
+          </div>
+          <div class="input-wrapper">
+            <input type="radio" name="ship" id="config_ship_classic" value="classic" />
+            <label for="config_ship_classic">Classic</label>
+          </div>
+        </div>
+
+        <div class="menu-section">
+          <div class="neon-text">Style</div>
+          <div class="input-wrapper">
+            <input type="radio" name="theme" id="config_theme_sanlo" value="sanlo" checked="checked" />
+            <label for="config_theme_sanlo">Sanlo</label>
+          </div>
+          <div class="input-wrapper">
+            <input type="radio" name="theme" id="config_theme_futurama" value="futurama" />
+            <label for="config_theme_futurama">Futurama</label>
+          </div>
+          <div class="input-wrapper">
+            <input type="radio" name="theme" id="config_theme_classic" value="classic" />
+            <label for="config_theme_classic">Classic</label>
+          </div>
+        </div>
+
+        <div class="menu-section">
+          <div class="neon-text">Debug</div>
+          <div class="input-wrapper">
+            <input type="checkbox" id="draw_bounding_circle" />
+            <label for="draw_bounding_circle">Draw Circles</label>
+          </div>
+          <div class="input-wrapper">
+            <input type="checkbox" id="draw_center_point" />
+            <label for="draw_center_point">Draw Centers</label>
+          </div>
+        </div>
+      </form>
+		</div>
+
+		<div id="canvas_container">
+      <div id="canvas_container_bkg">
+        <!-- <div class="sun"></div>
+        <div class="other"></div>
+        <div class="shooting_stars">
+          <div class="shooting_star"></div>
+        </div> -->
+      </div>
+      <canvas id="back_canvas"></canvas>
+      <canvas id="middle_canvas"></canvas>
+      <canvas id="front_canvas"></canvas>
+			<canvas id="control_canvas"></canvas>
+		</div>
+
+		<script src="build/base.js"></script>
+	</body>
+<html>
