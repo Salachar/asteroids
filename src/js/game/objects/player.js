@@ -12,6 +12,11 @@ const AudioManager = require('audio-manager');
 const Projectile = require('./projectile');
 const Segment = require('./segment');
 
+const thrusterSound = require('sounds/thrusters.mp3');
+const laserSound = require('sounds/laser.mp3');
+const explosionSound = require('sounds/explosion.mp3');
+const goldSound = require('sounds/gold.mp3');
+
 const { PI, HALF_PI,
   clampRadians,
   getMagnitude,
@@ -54,22 +59,22 @@ class Player extends GOB {
 
     this.audioManager = new AudioManager({
       thruster: {
-        src: require('../../../sounds/thrusters.mp3'),
+        src: thrusterSound,
         loop: true,
         volume: 0.65,
       },
       laser: {
-        src: require('../../../sounds/laser.mp3'),
+        src: laserSound,
         loop: false,
         volume: 0.03,
       },
       explosion: {
-        src: require('../../../sounds/explosion.mp3'),
+        src: explosionSound,
         loop: false,
         volume: 0.2,
       },
       gold: {
-        src: require('../../../sounds/gold.mp3'),
+        src: goldSound,
         loop: false,
         volume: 0.2,
       },

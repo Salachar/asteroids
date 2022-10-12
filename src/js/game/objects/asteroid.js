@@ -11,6 +11,8 @@ const { TWO_PI, PI, segmentMatch, clampRadians, rotatePointClockwise, rotatePoin
 const { checkRaySegmentIntersection } = require('lib/collision');
 const AudioManager = require('audio-manager');
 
+const thudSound = require('sounds/thud3.mp3');
+
 class Asteroid extends GOB {
 	constructor (opts = {}) {
 		super(opts);
@@ -30,7 +32,7 @@ class Asteroid extends GOB {
 
     this.audioManager = new AudioManager({
       thud: {
-        src: require('../../../sounds/thud3.mp3'),
+        src: thudSound,
         loop: false,
         volume: 0.3,
       },

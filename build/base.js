@@ -1256,6 +1256,8 @@ const { TWO_PI, PI, segmentMatch, clampRadians, rotatePointClockwise, rotatePoin
 const { checkRaySegmentIntersection } = __webpack_require__(90);
 const AudioManager = __webpack_require__(330);
 
+const thudSound = __webpack_require__(604);
+
 class Asteroid extends GOB {
 	constructor (opts = {}) {
 		super(opts);
@@ -1275,7 +1277,7 @@ class Asteroid extends GOB {
 
     this.audioManager = new AudioManager({
       thud: {
-        src: __webpack_require__(604),
+        src: thudSound,
         loop: false,
         volume: 0.3,
       },
@@ -2091,6 +2093,11 @@ const AudioManager = __webpack_require__(330);
 const Projectile = __webpack_require__(700);
 const Segment = __webpack_require__(394);
 
+const thrusterSound = __webpack_require__(971);
+const laserSound = __webpack_require__(331);
+const explosionSound = __webpack_require__(403);
+const goldSound = __webpack_require__(616);
+
 const { PI, HALF_PI,
   clampRadians,
   getMagnitude,
@@ -2133,22 +2140,22 @@ class Player extends GOB {
 
     this.audioManager = new AudioManager({
       thruster: {
-        src: __webpack_require__(971),
+        src: thrusterSound,
         loop: true,
         volume: 0.65,
       },
       laser: {
-        src: __webpack_require__(331),
+        src: laserSound,
         loop: false,
         volume: 0.03,
       },
       explosion: {
-        src: __webpack_require__(403),
+        src: explosionSound,
         loop: false,
         volume: 0.2,
       },
       gold: {
-        src: __webpack_require__(616),
+        src: goldSound,
         loop: false,
         volume: 0.2,
       },
