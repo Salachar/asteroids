@@ -1588,7 +1588,7 @@ class Asteroid extends GOB {
 
     try {
       if (this.resolved) return;
-      this.resolved = true;
+
 
       let supersegments = segments.concat(segments);
       let new_asteroid_one = [];
@@ -1600,6 +1600,7 @@ class Asteroid extends GOB {
         ++i; // ignore everything until we get to the first point
         if (i > supersegments.length) {
           console.log('split not found');
+          debugger;
           return;
         }
         segment = supersegments[i];
@@ -1611,6 +1612,7 @@ class Asteroid extends GOB {
       ++i;
       if (i > supersegments.length) {
         console.log('split not found');
+        debugger;
         return;
       }
       segment = supersegments[i];
@@ -1620,6 +1622,7 @@ class Asteroid extends GOB {
         ++i;
         if (i > supersegments.length) {
           console.log('split not found');
+          debugger;
           return;
         }
         segment = supersegments[i];
@@ -1634,6 +1637,7 @@ class Asteroid extends GOB {
       ++i;
       if (i > supersegments.length) {
         console.log('split not found');
+        debugger;
         return;
       }
       segment = supersegments[i];
@@ -1643,6 +1647,7 @@ class Asteroid extends GOB {
         ++i;
         if (i > supersegments.length) {
           console.log('split not found');
+          debugger;
           return;
         }
         segment = supersegments[i];
@@ -1650,6 +1655,8 @@ class Asteroid extends GOB {
 
       // First match against the "from" segment
       new_asteroid_two.push(split_from.point);
+
+      this.resolved = true;
 
       const left_aim = rotatePointCounterClockwise(other_obj.aim, 0.5);
       const mod = 0.25;
@@ -2716,7 +2723,7 @@ class World extends GOB {
     }
 
     spawnAsteroids (params = {}) {
-      const asteroidCount = 3;
+      const asteroidCount = 5;
       const third_width = this.width / 3;
       const third_height = this.height / 3;
       const sectionList = [
@@ -2738,7 +2745,7 @@ class World extends GOB {
         const x = (third_width * spawnMods.x) + getRandomInt(1, third_width);
         const y = (third_height * spawnMods.y) + getRandomInt(1, third_height);
 
-        const initialVelocity = 1;
+        const initialVelocity = 1.25;
         new Asteroid({
           ...params,
           world: this,
@@ -2746,7 +2753,7 @@ class World extends GOB {
             x: x,
             y: y,
           },
-          radius: getRandomInt(60, 90),
+          radius: getRandomInt(70, 100),
           // velocity: {
           //   x: 0,
           //   y: 0,

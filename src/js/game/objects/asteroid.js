@@ -343,7 +343,7 @@ class Asteroid extends GOB {
 
     try {
       if (this.resolved) return;
-      this.resolved = true;
+
 
       let supersegments = segments.concat(segments);
       let new_asteroid_one = [];
@@ -355,6 +355,7 @@ class Asteroid extends GOB {
         ++i; // ignore everything until we get to the first point
         if (i > supersegments.length) {
           console.log('split not found');
+          debugger;
           return;
         }
         segment = supersegments[i];
@@ -366,6 +367,7 @@ class Asteroid extends GOB {
       ++i;
       if (i > supersegments.length) {
         console.log('split not found');
+        debugger;
         return;
       }
       segment = supersegments[i];
@@ -375,6 +377,7 @@ class Asteroid extends GOB {
         ++i;
         if (i > supersegments.length) {
           console.log('split not found');
+          debugger;
           return;
         }
         segment = supersegments[i];
@@ -389,6 +392,7 @@ class Asteroid extends GOB {
       ++i;
       if (i > supersegments.length) {
         console.log('split not found');
+        debugger;
         return;
       }
       segment = supersegments[i];
@@ -398,6 +402,7 @@ class Asteroid extends GOB {
         ++i;
         if (i > supersegments.length) {
           console.log('split not found');
+          debugger;
           return;
         }
         segment = supersegments[i];
@@ -405,6 +410,8 @@ class Asteroid extends GOB {
 
       // First match against the "from" segment
       new_asteroid_two.push(split_from.point);
+
+      this.resolved = true;
 
       const left_aim = rotatePointCounterClockwise(other_obj.aim, 0.5);
       const mod = 0.25;

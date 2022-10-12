@@ -127,7 +127,7 @@ class World extends GOB {
     }
 
     spawnAsteroids (params = {}) {
-      const asteroidCount = 3;
+      const asteroidCount = 5;
       const third_width = this.width / 3;
       const third_height = this.height / 3;
       const sectionList = [
@@ -149,7 +149,7 @@ class World extends GOB {
         const x = (third_width * spawnMods.x) + getRandomInt(1, third_width);
         const y = (third_height * spawnMods.y) + getRandomInt(1, third_height);
 
-        const initialVelocity = 1;
+        const initialVelocity = 1.25;
         new Asteroid({
           ...params,
           world: this,
@@ -157,7 +157,7 @@ class World extends GOB {
             x: x,
             y: y,
           },
-          radius: getRandomInt(60, 90),
+          radius: getRandomInt(70, 100),
           // velocity: {
           //   x: 0,
           //   y: 0,
