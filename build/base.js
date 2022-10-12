@@ -1767,6 +1767,7 @@ class Nebula extends GOB {
       'transform': 'translateX(-50%) translateY(-50%) translateZ(0)',
       'border-radius': '50%',
     });
+    this.htmlElement.classList.add('nebula');
 
     if (coinFlip()) {
       // 291.19deg,
@@ -1895,6 +1896,7 @@ class Planet extends GOB {
         )
       `,
     });
+    this.htmlElement.classList.add('planet');
 
     GOM.canvas_container_bkg.appendChild(this.htmlElement);
 		return this;
@@ -1918,6 +1920,65 @@ NOTES
   `;
 
 */
+
+
+/***/ }),
+
+/***/ 527:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+const GOM = __webpack_require__(39);
+const GOB = __webpack_require__(406);
+
+const { style } = __webpack_require__(391);
+const { getRandomInt } = __webpack_require__(66);
+
+class ShootingStars extends GOB {
+	constructor (opts = {}) {
+		super({
+      ...opts,
+      type: 'shooting_stars',
+      renderType: 'css',
+    });
+
+    // Currently there can only be one at a time
+    this.current_star = null;
+
+    this.htmlElement = style({
+      'position': 'relative',
+      'width': '100%',
+      'height': '100%',
+      'transform': 'rotateZ(45deg)',
+    });
+    this.htmlElement.classList.add('shooting_stars');
+    GOM.canvas_container_bkg.appendChild(this.htmlElement);
+
+    this.startStarSpawner();
+
+		return this;
+	}
+
+  startStarSpawner () {
+    this.current_star = style({
+      'position': 'absolute',
+      'left': `${getRandomInt(0, 100)}%`,
+      'top': `${getRandomInt(0, 100)}%`,
+    });
+    this.current_star.classList.add('shooting_star');
+    this.htmlElement.appendChild(this.current_star);
+
+    setTimeout(() => {
+      this.htmlElement.innerHTML = '';
+      this.current_star = null;
+    }, 5000);
+
+    setTimeout(() => {
+      this.startStarSpawner();
+    }, getRandomInt(10000, 15000));
+  }
+}
+
+module.exports = ShootingStars;
 
 
 /***/ }),
@@ -1950,6 +2011,7 @@ class Sun extends GOB {
       'background': 'rgb(241, 241, 136)',
       'box-shadow': '0 0 40px 20px rgb(241, 241, 136)',
     });
+    this.htmlElement.classList.add('sun');
 
     GOM.canvas_container_bkg.appendChild(this.htmlElement);
 		return this;
@@ -1993,6 +2055,7 @@ class Void extends GOB {
         0 0 140px 90px #0ff
       `,
     })
+    this.htmlElement.classList.add('void');
 
     GOM.canvas_container_bkg.appendChild(this.htmlElement);
 		return this;
@@ -2249,8 +2312,12 @@ class Player extends GOB {
           if (segment.type === 'arc') return;
           new Segment({
             world: this.world,
-            baseVelocity: this.velocity,
+            baseVelocity: {
+              x: this.velocity.x * 0.25,
+              y: this.velocity.y * 0.25,
+            },
             direction: getRandomUnitVector(),
+            speed: 0.75,
             segment,
             config,
           });
@@ -2534,6 +2601,7 @@ const Nebula = __webpack_require__(596);
 const Planet = __webpack_require__(541);
 const Sun = __webpack_require__(642);
 const Void = __webpack_require__(24);
+const ShootingStars = __webpack_require__(527);
 
 const {
   getRandom,
@@ -2627,6 +2695,9 @@ class World extends GOB {
       );
       this.background_objects.push(
         new Void({ world: this })
+      );
+      this.background_objects.push(
+        new ShootingStars({ world: this })
       );
     }
 

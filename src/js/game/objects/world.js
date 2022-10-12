@@ -12,6 +12,7 @@ const Nebula = require('game/objects/background/nebula');
 const Planet = require('game/objects/background/planet');
 const Sun = require('game/objects/background/sun');
 const Void = require('game/objects/background/void');
+const ShootingStars = require('game/objects/background/shooting-stars');
 
 const {
   getRandom,
@@ -105,6 +106,9 @@ class World extends GOB {
       );
       this.background_objects.push(
         new Void({ world: this })
+      );
+      this.background_objects.push(
+        new ShootingStars({ world: this })
       );
     }
 

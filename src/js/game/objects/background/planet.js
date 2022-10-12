@@ -68,6 +68,7 @@ class Planet extends GOB {
         )
       `,
     });
+    this.htmlElement.classList.add('planet');
 
     GOM.canvas_container_bkg.appendChild(this.htmlElement);
 		return this;

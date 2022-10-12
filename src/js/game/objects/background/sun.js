@@ -23,6 +23,7 @@ class Sun extends GOB {
       'background': 'rgb(241, 241, 136)',
       'box-shadow': '0 0 40px 20px rgb(241, 241, 136)',
     });
+    this.htmlElement.classList.add('sun');
 
     GOM.canvas_container_bkg.appendChild(this.htmlElement);
 		return this;

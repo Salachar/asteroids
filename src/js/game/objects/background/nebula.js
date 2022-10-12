@@ -27,6 +27,7 @@ class Nebula extends GOB {
       'transform': 'translateX(-50%) translateY(-50%) translateZ(0)',
       'border-radius': '50%',
     });
+    this.htmlElement.classList.add('nebula');
 
     if (coinFlip()) {
       // 291.19deg,

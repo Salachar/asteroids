@@ -240,8 +240,12 @@ class Player extends GOB {
           if (segment.type === 'arc') return;
           new Segment({
             world: this.world,
-            baseVelocity: this.velocity,
+            baseVelocity: {
+              x: this.velocity.x * 0.25,
+              y: this.velocity.y * 0.25,
+            },
             direction: getRandomUnitVector(),
+            speed: 0.75,
             segment,
             config,
           });

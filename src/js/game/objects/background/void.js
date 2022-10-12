@@ -27,6 +27,7 @@ class Void extends GOB {
         0 0 140px 90px #0ff
       `,
     })
+    this.htmlElement.classList.add('void');
 
     GOM.canvas_container_bkg.appendChild(this.htmlElement);
 		return this;
