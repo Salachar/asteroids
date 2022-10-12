@@ -368,7 +368,11 @@ class GOB {
 	}
 
 	shutdown () {
-    if (this.audioManager) this.audioManager.shutdown();
+    // Ignore already shutdown things
+    if (this.remove) return;
+    if (this.audioManager) {
+      this.audioManager.shutdown();
+    }
 		this.remove = true;
 	}
 

@@ -38,6 +38,7 @@ class Player extends GOB {
     this.rotationSpeed = PI / 72;
 		this.theta = Math.PI / 2;
     this.invincible_time = opts.invincible_time || 0;
+    this.dead = false;
 
     if (this.invincible_time) {
       this.collidable = false;

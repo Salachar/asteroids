@@ -40,7 +40,11 @@ class World extends GOB {
     }
 
     handlePlayerDeath () {
+      console.log('player dead');
+      if (this.player.dead) return;
+      this.player.dead = true;
       window.setTimeout(() => {
+        console.log('player shutdown');
         this.player.shutdown();
         this.spawnPlayer({
           invincible_time: 3000,

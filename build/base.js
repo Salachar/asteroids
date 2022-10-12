@@ -551,7 +551,11 @@ class GOB {
 	}
 
 	shutdown () {
-    if (this.audioManager) this.audioManager.shutdown();
+    // Ignore already shutdown things
+    if (this.remove) return;
+    if (this.audioManager) {
+      this.audioManager.shutdown();
+    }
 		this.remove = true;
 	}
 
@@ -1274,8 +1278,6 @@ class Asteroid extends GOB {
     if (this.points && this.points.length) {
       this.calculateBaseProps();
     }
-
-    console.log(thudSound);
 
     this.audioManager = new AudioManager({
       thud: {
@@ -2121,6 +2123,7 @@ class Player extends GOB {
     this.rotationSpeed = PI / 72;
 		this.theta = Math.PI / 2;
     this.invincible_time = opts.invincible_time || 0;
+    this.dead = false;
 
     if (this.invincible_time) {
       this.collidable = false;
@@ -2645,7 +2648,11 @@ class World extends GOB {
     }
 
     handlePlayerDeath () {
+      console.log('player dead');
+      if (this.player.dead) return;
+      this.player.dead = true;
       window.setTimeout(() => {
+        console.log('player shutdown');
         this.player.shutdown();
         this.spawnPlayer({
           invincible_time: 3000,
@@ -3466,6 +3473,7 @@ class AudioPlayer {
     // the start quieter but also help eliminate starting pops
     this.player.play();
     this.rampUpTimer = window.setInterval(() => {
+      console.log('play timer for', this.player.src)
       if (this.player.volume + this.volumeRampSpeed >= this.volume) {
         this.player.volume = this.volume;
         window.clearInterval(this.rampUpTimer);
@@ -3489,6 +3497,7 @@ class AudioPlayer {
     // Stop if the player is already paused
     if (this.player.paused || this.rampDownTimer) return;
     this.rampDownTimer = window.setInterval(() => {
+      console.log('pause timer for', this.player.src)
       if (this.player.volume - this.volumeRampSpeed <= 0) {
         this.player.volume = 0;
         this.player.pause();
@@ -3501,12 +3510,14 @@ class AudioPlayer {
   }
 
   shutdown () {
+    this.player.volume = 0;
+    this.player.pause();
+    this.player.volume = 0;
+    console.log('shutdown', this.player.src)
     window.clearInterval(this.rampUpTimer);
     this.rampUpTimer = null;
     window.clearInterval(this.rampDownTimer);
     this.rampDownTimer = null;
-    this.player.volume = 0;
-    this.player.pause();
     this.player.src = null;
   }
 }
