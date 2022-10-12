@@ -1275,6 +1275,8 @@ class Asteroid extends GOB {
       this.calculateBaseProps();
     }
 
+    console.log(thudSound);
+
     this.audioManager = new AudioManager({
       thud: {
         src: thudSound,
