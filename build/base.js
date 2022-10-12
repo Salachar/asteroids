@@ -1259,7 +1259,7 @@ class Asteroid extends GOB {
 		this.type = "asteroid";
     this.radius = opts.radius || 150;
     this.rotationSpeed = opts.rotationSpeed || (PI / 480);
-
+    this.owner_size = opts.owner_size || 'big';
     // Custom
     this.points = opts.points || null;
     this.translated_points = null;
@@ -1330,6 +1330,20 @@ class Asteroid extends GOB {
 
     if (this.radius < (this.world.player.radius / 3)) {
       // TODO a particle effect or something for indicator
+      console.log(this.owner_size)
+      SanloStyles.asteroidExplosionParticles({
+        world: this.world,
+        direction: 'circular',
+        spawn: this.center,
+        color: this.owner_size === 'small' ? {
+          value: color(255, 255, 255),
+          to: color(255, 215, 0),
+        } :  {
+          value: color(255, 255, 255),
+          to: color(213, 72, 168),
+        },
+      });
+
       this.shutdown();
     }
   }
@@ -1529,6 +1543,8 @@ class Asteroid extends GOB {
           });
           if (second_split_point) {
             this.splitAsteroid({
+              collision_point,
+              projectile: other_obj,
               split_from: {
                 point: first_split_point,
                 segment: this_segment,
@@ -1547,23 +1563,30 @@ class Asteroid extends GOB {
   }
 
   splitAsteroid (data = {}) {
-    this.audioManager.playOnce("thud", {
-      no_ramp_up: true,
-    });
-
     const {
+      collision_point,
+      projectile,
       split_from = {},
       split_to = {},
       //
       segments = [],
       collision_data = {},
     } = data;
-
     const {
       other_obj,
     } = collision_data;
 
     if (segmentMatch(split_from.segment, split_to.segment)) return;
+
+    this.audioManager.playOnce("thud", {
+      no_ramp_up: true,
+    });
+    SanloStyles.asteroidImpactParticles({
+      world: this.world,
+      direction: projectile.aim,
+      spawn: collision_point,
+      baseVelocity: this.velocity,
+    });
 
     try {
       if (this.resolved) return;
@@ -1624,6 +1647,7 @@ class Asteroid extends GOB {
           y: this.velocity.y + (left_aim.y * mod),
         },
         rotationSpeed: (PI / 480),
+        owner_size: (this.radius > this.world.player.radius) ? 'big' : 'small',
       })
 
       const right_aim = rotatePointClockwise(other_obj.aim, 0.5);
@@ -1639,6 +1663,7 @@ class Asteroid extends GOB {
           y: this.velocity.y + (right_aim.y * mod),
         },
         rotationSpeed: -(PI / 480),
+        owner_size: (this.radius > this.world.player.radius) ? 'big' : 'small',
       });
 
       this.shutdown();
@@ -1978,6 +2003,7 @@ const Projectile = __webpack_require__(700);
 const { PI, HALF_PI,
   clampRadians,
   getMagnitude,
+  getUnitVector,
   rotatePointCounterClockwise,
  } = __webpack_require__(488);
 
@@ -2058,12 +2084,11 @@ class Player extends GOB {
     }
   }
 
-  getUnitVector () {
-    const unitVector = {
+  getPlayerHeadingVector () {
+    return {
       x: Math.cos(this.theta - HALF_PI),
       y: Math.sin(this.theta - HALF_PI),
     };
-    return unitVector;
   }
 
   checkPlayerMovement () {
@@ -2093,15 +2118,15 @@ class Player extends GOB {
       this.generateSegments();
     }
 
-    const unitVector = this.getUnitVector();
+    const playerHeadingVector = this.getPlayerHeadingVector();
 
     this.theta += this.rotation;
     this.theta = clampRadians(this.theta);
 
     if (this.thrust.active) {
       this.audioManager.players.thruster.play();
-      this.velocity.x += (unitVector.x * this.thrust.power);
-      this.velocity.y += (unitVector.y * this.thrust.power);
+      this.velocity.x += (playerHeadingVector.x * this.thrust.power);
+      this.velocity.y += (playerHeadingVector.y * this.thrust.power);
     } else {
       this.audioManager.players.thruster.pause();
     }
@@ -2117,7 +2142,7 @@ class Player extends GOB {
     // Particles after position update otherwise they will
     // emit from the previous location
     if (this.thrust.active) {
-      this.thrustParticles(unitVector);
+      this.thrustParticles(playerHeadingVector);
     }
   }
 
@@ -2137,7 +2162,7 @@ class Player extends GOB {
   fireWeapon () {
     if (!this.weaponFirable) return;
 
-    const unitVector = this.getUnitVector();
+    const playerHeadingVector = this.getPlayerHeadingVector();
     this.audioManager.playOnce("laser");
     new Projectile({
       world: this.world,
@@ -2150,26 +2175,31 @@ class Player extends GOB {
       // ),
       spawn: this.getCenter(),
       baseVelocity: this.velocity,
-      aim: unitVector,
+      aim: playerHeadingVector,
     });
 
-    this.maxProjectiles =
+    this.cannonParticles(playerHeadingVector);
+
     this.weaponFirable = false;
     window.setTimeout(() => {
       this.weaponFirable = true;
     }, 500);
   }
 
-  thrustParticles (unitVector) {
+  cannonParticles (playerHeadingVector) {
+    SanloStyles.cannonParticles(this, playerHeadingVector);
+  }
+
+  thrustParticles (playerHeadingVector) {
     switch (CFG.ship) {
       case 'classic':
-        ClassicStyles.thrustParticles(this, unitVector);
+        ClassicStyles.thrustParticles(this, playerHeadingVector);
         break;
       case 'futurama':
-        FuturamaStyles.thrustParticles(this, unitVector);
+        FuturamaStyles.thrustParticles(this, playerHeadingVector);
         break;
       default: // "sanlo"
-        SanloStyles.thrustParticles(this, unitVector);
+        SanloStyles.thrustParticles(this, playerHeadingVector);
         break;
     }
   }
@@ -2179,6 +2209,15 @@ class Player extends GOB {
     if (other_obj.type === 'asteroid') {
       if (other_obj.radius <= this.radius) {
         this.audioManager.pauseAll().playOnce("gold");
+        SanloStyles.pickupGoldParticles({
+          world: this.world,
+          direction: getUnitVector({
+            x: this.x - other_obj.x,
+            y: this.y - other_obj.y,
+          }),
+          baseVelocity: this.velocity,
+          spawn: other_obj.center,
+        });
         other_obj.shutdown();
       } else {
         this.world.handlePlayerDeath();
@@ -2471,7 +2510,7 @@ class World extends GOB {
     }
 
     spawnAsteroids (params = {}) {
-      const asteroidCount = 8;
+      const asteroidCount = 2;
       const third_width = this.width / 3;
       const third_height = this.height / 3;
       const sectionList = [
@@ -2501,14 +2540,14 @@ class World extends GOB {
             y: y,
           },
           radius: getRandomInt(60, 90),
-          // velocity: {
-          //   x: 0,
-          //   y: 0,
-          // },
           velocity: {
-            x: getRandom(-1, 1),
-            y: getRandom(-1, 1),
+            x: 0,
+            y: 0,
           },
+          // velocity: {
+          //   x: getRandom(-1, 1),
+          //   y: getRandom(-1, 1),
+          // },
         })
       }
     }
@@ -2803,7 +2842,7 @@ module.exports = FuturamaStyles;
 
 const Particles = __webpack_require__(813);
 const { color } = __webpack_require__(293);
-const { rotatePointCounterClockwise } = __webpack_require__(488);
+const { HALF_PI, rotatePointCounterClockwise } = __webpack_require__(488);
 
 const SanloStyles = {
   generateShip: (game_obj) => {
@@ -2940,11 +2979,35 @@ const SanloStyles = {
     };
   },
 
+  cannonParticles (game_obj, unitVector) {
+    new Particles({
+      world: game_obj.world,
+      radius: 3,
+      color: {
+        value: color(255, 255, 255),
+        to: color(213, 72, 168),
+      },
+      particleLifetime: 60,
+      spawn: rotatePointCounterClockwise(
+        game_obj.uniquePoints.cannon,
+        game_obj.theta,
+        game_obj.getCenter(),
+      ),
+      baseVelocity: game_obj.velocity,
+      speed: 4,
+      aim: {
+        x: unitVector.x,
+        y: unitVector.y,
+      },
+    });
+  },
+
   thrustParticles (game_obj, unitVector) {
     new Particles({
       world: game_obj.world,
       neon: true,
       amount: 3,
+      radius: 6,
       color: {
         value: color(255, 255, 255),
         to: color(213, 72, 168),
@@ -2968,6 +3031,103 @@ const SanloStyles = {
         y: unitVector.y * -1,
         random: [-0.2, 0.2],
       },
+    });
+  },
+
+  // asteroidImpactParticles (game_obj, unitVector, collision_point) {
+  asteroidImpactParticles (opts = {}) {
+    const {
+      world,
+      direction,
+      spawn,
+      baseVelocity,
+    } = opts;
+
+    new Particles({
+      world,
+      neon: true,
+      amount: 9,
+      radius: 3,
+      color: {
+        value: color(255, 255, 255),
+        to: color(213, 72, 168),
+      },
+      particleLifetime: {
+        value: 200,
+        random: [0.6, 1.2],
+      },
+      spawn,
+      baseVelocity,
+      speed: {
+        value: 2,
+        random: [0.5, 1.25],
+      },
+      aim: {
+        x: direction.x * -1,
+        y: direction.y * -1,
+        random: [-0.2, 0.2],
+      },
+    });
+  },
+
+  asteroidExplosionParticles (opts = {}) {
+    const {
+      world,
+      color,
+      spawn,
+    } = opts;
+
+    new Particles({
+      world,
+      neon: true,
+      amount: 20,
+      radius: 8,
+      color: color,
+      particleLifetime: {
+        value: 200,
+        random: [0.6, 1.2],
+      },
+      spawn,
+      baseVelocity: {
+        x: 0,
+        y: 0,
+      },
+      speed: {
+        value: 1.75,
+        random: [1, 1.25],
+      },
+      aim: {
+        x: 1,
+        y: 0,
+        random: [-HALF_PI, HALF_PI],
+      },
+    });
+  },
+
+  pickupGoldParticles (opts = {}) {
+    const {
+      world,
+      direction,
+      spawn,
+    } = opts;
+
+    new Particles({
+      world,
+      neon: true,
+      amount: 20,
+      radius: 1,
+      color: {
+        value: color(255, 255, 255),
+        to: color(255, 215, 0),
+      },
+      particleLifetime: 200,
+      spawn,
+      baseVelocity: {
+        x: 0,
+        y: 0,
+      },
+      speed: 1.5,
+      aim: direction,
     });
   },
 }
@@ -3725,7 +3885,7 @@ const ColorHelpers = {
   },
 
   getHEX: (color) => {
-    if (color.r && color.g && color.b) {
+    if (color.r || color.g || color.b) {
       return ColorHelpers.RGBtoHEX(color);
     }
     return color;
@@ -3886,13 +4046,21 @@ const MathHelpers = {
     return angle;
   },
 
-  getDistance: function (p1, p2, no_sqrt) {
+  getDistance: (p1, p2, no_sqrt) => {
 		let dist = sqr(p1.x - p2.x) + sqr(p1.y - p2.y);
 		if (no_sqrt) return dist;
 		return Math.sqrt(dist);
 	},
 
-  getUnitVector: function (segment) {
+  getUnitVector: (vector) => {
+    const mag = MathHelpers.getMagnitude(vector);
+    return {
+      x: vector.x / mag,
+      y: vector.y / mag,
+    };
+  },
+
+  getUnitVectorSegment: (segment) => {
     let vector = {
       x: segment.p2.x - segment.p1.x,
       y: segment.p2.y - segment.p1.y,
@@ -3904,7 +4072,7 @@ const MathHelpers = {
     };
   },
 
-  getIntersection (r, s) {
+  getIntersection: (r, s) => {
     if ((r.dx / r.dy) == (s.dx / s.dy)) return null;
 
     const t2 = (r.dx * (s.py - r.py) + r.dy * (r.px - s.px)) / (s.dx * r.dy - s.dy * r.dx);
@@ -3987,7 +4155,7 @@ const MathHelpers = {
     return MathHelpers.distanceToLine(point, item);
   },
 
-  distanceToLine: function (point, item) {
+  distanceToLine: (point, item) => {
     const A = point.x - item.p1.x;
     const B = point.y - item.p1.y;
     const C = item.p2.x - item.p1.x;
@@ -4019,15 +4187,15 @@ const MathHelpers = {
     }
   },
 
-  getDotProduct: function (v1, v2) {
+  getDotProduct: (v1, v2) => {
     return v1.x * v2.x + v1.y * v2.y;
   },
 
-  getMagnitude: function (v) {
+  getMagnitude: (v) => {
     return Math.sqrt(sqr(v.x) + sqr(v.y));
   },
 
-  getAngleBetweenVectors: function (v1, v2) {
+  getAngleBetweenVectors: (v1, v2) => {
     const dot = MathHelpers.getDotProduct(v1, v2);
     const v1_mag = MathHelpers.getMagnitude(v1);
     const v2_mag = MathHelpers.getMagnitude(v2);
@@ -4036,7 +4204,7 @@ const MathHelpers = {
     return angle;
   },
 
-  getNormal: function (segment, reference_point) {
+  getNormal: (segment, reference_point) => {
     reference_point = reference_point || Mouse;
     // the "open" normal will be on the side
     // of the reference point, the mouse in most cases
@@ -4044,7 +4212,7 @@ const MathHelpers = {
     if (segment.segment) segment = segment.segment;
 
     // Get a unit vector of that perpendicular
-    let unit_vector = MathHelpers.getUnitVector(segment);
+    let unit_vector = MathHelpers.getUnitVectorSegment(segment);
 
     let perp_unit_vector = {
       x: unit_vector.y,
@@ -4086,12 +4254,12 @@ const MathHelpers = {
     };
   },
 
-  getSlope: function (p1, p2) {
+  getSlope: (p1, p2) => {
     return (p2.y - p1.y) / (p2.x - p1.x);
   },
 
-  getPerpendicularUnitVector: function (segment) {
-    let unit_vector = MathHelpers.getUnitVector(segment);
+  getPerpendicularUnitVector: (segment) => {
+    let unit_vector = MathHelpers.getUnitVectorSegment(segment);
     let perp = {
       x: unit_vector.y,
       y: unit_vector.x * -1
@@ -4099,7 +4267,7 @@ const MathHelpers = {
     return perp;
   },
 
-  getSegmentMiddle: function (segment) {
+  getSegmentMiddle: (segment) => {
     return {
       x: segment.p1.x + ((segment.p2.x - segment.p1.x) * 0.5),
       y: segment.p1.y + ((segment.p2.y - segment.p1.y) * 0.5),
@@ -4201,6 +4369,7 @@ class Particle extends GOB {
 		super(opts);
 
 		this.type = "particle";
+    this.radius = opts.radius;
     // this.cross_boundary = false;
     this.current_lifetime = 0;
     this.lifetime = opts.lifetime;
@@ -4235,7 +4404,7 @@ class Particle extends GOB {
       this.context.arc(
         this.x,
         this.y,
-        6,
+        this.radius,
         0,
         TWO_PI,
       );
@@ -4280,6 +4449,17 @@ const Particle = __webpack_require__(322);
 const { getRandom } = __webpack_require__(66);
 const { rotatePointCounterClockwise } = __webpack_require__(488);
 
+const setNumberProperty = (property) => {
+  if (typeof property === 'object') return property;
+  return {
+    value: property,
+  };
+};
+
+const setColorProperty = (property) => {
+
+};
+
 class Particles extends GOB {
 	constructor (opts = {}) {
 		super(opts);
@@ -4288,25 +4468,30 @@ class Particles extends GOB {
     this.cross_boundary = false;
     this.render = false;
 
+    this.neon = opts.neon || true;
+    this.radius = setNumberProperty(opts.radius || 10);
+    this.speed = setNumberProperty(opts.speed || 0);
+    this.particleLifetime = setNumberProperty(opts.particleLifetime || 200);
     this.spawnMethod = opts.spawnMethod || 'single';
-    this.speed = opts.speed || 0;
-    this.amount = opts.amount || 2;
-    this.particleLifetime = opts.particleLifetime;
-
-    // this.lifetime = opts.lifetime;
-    // this.delay = null;
-    // this.delay_between_particles = null;
-    // this.shape = opts.shape || 'circle',
-    // this.deviation = opts.deviation || '10',
-
+    this.amount = opts.amount || 3;
     this.partcles = [];
-    for (let i = 0; i < this.amount; ++i) {
 
-      let speedMod = opts.speed.value;
-      if (opts.speed.random) {
+    this.generateParticles(opts);
+
+    if (this.spawnMethod === 'single') {
+      this.shutdown();
+    }
+
+		return this;
+	}
+
+  generateParticles (opts) {
+    for (let i = 0; i < this.amount; ++i) {
+      let speedMod = this.speed.value;
+      if (this.speed.random) {
         speedMod = getRandom(
-          speedMod * opts.speed.random[0],
-          speedMod * opts.speed.random[1]
+          speedMod * this.speed.random[0],
+          speedMod * this.speed.random[1]
         );
       }
 
@@ -4321,30 +4506,25 @@ class Particles extends GOB {
         );
       }
 
-      let lifetime = opts.particleLifetime.value;
-      if (opts.particleLifetime.random) {
+      let lifetime = this.particleLifetime.value;
+      if (this.particleLifetime.random) {
         lifetime = getRandom(
-          lifetime * opts.particleLifetime.random[0],
-          lifetime * opts.particleLifetime.random[1]
+          lifetime * this.particleLifetime.random[0],
+          lifetime * this.particleLifetime.random[1]
         );
       }
 
       this.partcles.push(new Particle({
         world: opts.world,
-        neon: opts.neon,
+        radius: this.radius.value,
+        neon: this.neon,
         color: opts.color,
         spawn: opts.spawn,
         velocity,
         lifetime,
       }));
     }
-
-    if (this.spawnMethod === 'single') {
-      this.shutdown();
-    }
-
-		return this;
-	}
+  }
 
 	update () {}
 }

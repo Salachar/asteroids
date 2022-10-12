@@ -22,7 +22,7 @@ class Asteroid extends GOB {
 		this.type = "asteroid";
     this.radius = opts.radius || 150;
     this.rotationSpeed = opts.rotationSpeed || (PI / 480);
-
+    this.owner_size = opts.owner_size || 'big';
     // Custom
     this.points = opts.points || null;
     this.translated_points = null;
@@ -93,6 +93,20 @@ class Asteroid extends GOB {
 
     if (this.radius < (this.world.player.radius / 3)) {
       // TODO a particle effect or something for indicator
+      console.log(this.owner_size)
+      SanloStyles.asteroidExplosionParticles({
+        world: this.world,
+        direction: 'circular',
+        spawn: this.center,
+        color: this.owner_size === 'small' ? {
+          value: color(255, 255, 255),
+          to: color(255, 215, 0),
+        } :  {
+          value: color(255, 255, 255),
+          to: color(213, 72, 168),
+        },
+      });
+
       this.shutdown();
     }
   }
@@ -292,6 +306,8 @@ class Asteroid extends GOB {
           });
           if (second_split_point) {
             this.splitAsteroid({
+              collision_point,
+              projectile: other_obj,
               split_from: {
                 point: first_split_point,
                 segment: this_segment,
@@ -310,23 +326,30 @@ class Asteroid extends GOB {
   }
 
   splitAsteroid (data = {}) {
-    this.audioManager.playOnce("thud", {
-      no_ramp_up: true,
-    });
-
     const {
+      collision_point,
+      projectile,
       split_from = {},
       split_to = {},
       //
       segments = [],
       collision_data = {},
     } = data;
-
     const {
       other_obj,
     } = collision_data;
 
     if (segmentMatch(split_from.segment, split_to.segment)) return;
+
+    this.audioManager.playOnce("thud", {
+      no_ramp_up: true,
+    });
+    SanloStyles.asteroidImpactParticles({
+      world: this.world,
+      direction: projectile.aim,
+      spawn: collision_point,
+      baseVelocity: this.velocity,
+    });
 
     try {
       if (this.resolved) return;
@@ -387,6 +410,7 @@ class Asteroid extends GOB {
           y: this.velocity.y + (left_aim.y * mod),
         },
         rotationSpeed: (PI / 480),
+        owner_size: (this.radius > this.world.player.radius) ? 'big' : 'small',
       })
 
       const right_aim = rotatePointClockwise(other_obj.aim, 0.5);
@@ -402,6 +426,7 @@ class Asteroid extends GOB {
           y: this.velocity.y + (right_aim.y * mod),
         },
         rotationSpeed: -(PI / 480),
+        owner_size: (this.radius > this.world.player.radius) ? 'big' : 'small',
       });
 
       this.shutdown();

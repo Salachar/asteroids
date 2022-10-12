@@ -6,6 +6,17 @@ const Particle = require('./particle');
 const { getRandom } = require('lib/random');
 const { rotatePointCounterClockwise } = require('math');
 
+const setNumberProperty = (property) => {
+  if (typeof property === 'object') return property;
+  return {
+    value: property,
+  };
+};
+
+const setColorProperty = (property) => {
+
+};
+
 class Particles extends GOB {
 	constructor (opts = {}) {
 		super(opts);
@@ -14,25 +25,30 @@ class Particles extends GOB {
     this.cross_boundary = false;
     this.render = false;
 
+    this.neon = opts.neon || true;
+    this.radius = setNumberProperty(opts.radius || 10);
+    this.speed = setNumberProperty(opts.speed || 0);
+    this.particleLifetime = setNumberProperty(opts.particleLifetime || 200);
     this.spawnMethod = opts.spawnMethod || 'single';
-    this.speed = opts.speed || 0;
-    this.amount = opts.amount || 2;
-    this.particleLifetime = opts.particleLifetime;
-
-    // this.lifetime = opts.lifetime;
-    // this.delay = null;
-    // this.delay_between_particles = null;
-    // this.shape = opts.shape || 'circle',
-    // this.deviation = opts.deviation || '10',
-
+    this.amount = opts.amount || 3;
     this.partcles = [];
-    for (let i = 0; i < this.amount; ++i) {
 
-      let speedMod = opts.speed.value;
-      if (opts.speed.random) {
+    this.generateParticles(opts);
+
+    if (this.spawnMethod === 'single') {
+      this.shutdown();
+    }
+
+		return this;
+	}
+
+  generateParticles (opts) {
+    for (let i = 0; i < this.amount; ++i) {
+      let speedMod = this.speed.value;
+      if (this.speed.random) {
         speedMod = getRandom(
-          speedMod * opts.speed.random[0],
-          speedMod * opts.speed.random[1]
+          speedMod * this.speed.random[0],
+          speedMod * this.speed.random[1]
         );
       }
 
@@ -47,30 +63,25 @@ class Particles extends GOB {
         );
       }
 
-      let lifetime = opts.particleLifetime.value;
-      if (opts.particleLifetime.random) {
+      let lifetime = this.particleLifetime.value;
+      if (this.particleLifetime.random) {
         lifetime = getRandom(
-          lifetime * opts.particleLifetime.random[0],
-          lifetime * opts.particleLifetime.random[1]
+          lifetime * this.particleLifetime.random[0],
+          lifetime * this.particleLifetime.random[1]
         );
       }
 
       this.partcles.push(new Particle({
         world: opts.world,
-        neon: opts.neon,
+        radius: this.radius.value,
+        neon: this.neon,
         color: opts.color,
         spawn: opts.spawn,
         velocity,
         lifetime,
       }));
     }
-
-    if (this.spawnMethod === 'single') {
-      this.shutdown();
-    }
-
-		return this;
-	}
+  }
 
 	update () {}
 }

@@ -12,6 +12,7 @@ const Projectile = require('./projectile');
 const { PI, HALF_PI,
   clampRadians,
   getMagnitude,
+  getUnitVector,
   rotatePointCounterClockwise,
  } = require('math');
 
@@ -92,12 +93,11 @@ class Player extends GOB {
     }
   }
 
-  getUnitVector () {
-    const unitVector = {
+  getPlayerHeadingVector () {
+    return {
       x: Math.cos(this.theta - HALF_PI),
       y: Math.sin(this.theta - HALF_PI),
     };
-    return unitVector;
   }
 
   checkPlayerMovement () {
@@ -127,15 +127,15 @@ class Player extends GOB {
       this.generateSegments();
     }
 
-    const unitVector = this.getUnitVector();
+    const playerHeadingVector = this.getPlayerHeadingVector();
 
     this.theta += this.rotation;
     this.theta = clampRadians(this.theta);
 
     if (this.thrust.active) {
       this.audioManager.players.thruster.play();
-      this.velocity.x += (unitVector.x * this.thrust.power);
-      this.velocity.y += (unitVector.y * this.thrust.power);
+      this.velocity.x += (playerHeadingVector.x * this.thrust.power);
+      this.velocity.y += (playerHeadingVector.y * this.thrust.power);
     } else {
       this.audioManager.players.thruster.pause();
     }
@@ -151,7 +151,7 @@ class Player extends GOB {
     // Particles after position update otherwise they will
     // emit from the previous location
     if (this.thrust.active) {
-      this.thrustParticles(unitVector);
+      this.thrustParticles(playerHeadingVector);
     }
   }
 
@@ -171,7 +171,7 @@ class Player extends GOB {
   fireWeapon () {
     if (!this.weaponFirable) return;
 
-    const unitVector = this.getUnitVector();
+    const playerHeadingVector = this.getPlayerHeadingVector();
     this.audioManager.playOnce("laser");
     new Projectile({
       world: this.world,
@@ -184,26 +184,31 @@ class Player extends GOB {
       // ),
       spawn: this.getCenter(),
       baseVelocity: this.velocity,
-      aim: unitVector,
+      aim: playerHeadingVector,
     });
 
-    this.maxProjectiles =
+    this.cannonParticles(playerHeadingVector);
+
     this.weaponFirable = false;
     window.setTimeout(() => {
       this.weaponFirable = true;
     }, 500);
   }
 
-  thrustParticles (unitVector) {
+  cannonParticles (playerHeadingVector) {
+    SanloStyles.cannonParticles(this, playerHeadingVector);
+  }
+
+  thrustParticles (playerHeadingVector) {
     switch (CFG.ship) {
       case 'classic':
-        ClassicStyles.thrustParticles(this, unitVector);
+        ClassicStyles.thrustParticles(this, playerHeadingVector);
         break;
       case 'futurama':
-        FuturamaStyles.thrustParticles(this, unitVector);
+        FuturamaStyles.thrustParticles(this, playerHeadingVector);
         break;
       default: // "sanlo"
-        SanloStyles.thrustParticles(this, unitVector);
+        SanloStyles.thrustParticles(this, playerHeadingVector);
         break;
     }
   }
@@ -213,6 +218,15 @@ class Player extends GOB {
     if (other_obj.type === 'asteroid') {
       if (other_obj.radius <= this.radius) {
         this.audioManager.pauseAll().playOnce("gold");
+        SanloStyles.pickupGoldParticles({
+          world: this.world,
+          direction: getUnitVector({
+            x: this.x - other_obj.x,
+            y: this.y - other_obj.y,
+          }),
+          baseVelocity: this.velocity,
+          spawn: other_obj.center,
+        });
         other_obj.shutdown();
       } else {
         this.world.handlePlayerDeath();

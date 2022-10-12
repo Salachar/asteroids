@@ -37,13 +37,21 @@ const MathHelpers = {
     return angle;
   },
 
-  getDistance: function (p1, p2, no_sqrt) {
+  getDistance: (p1, p2, no_sqrt) => {
 		let dist = sqr(p1.x - p2.x) + sqr(p1.y - p2.y);
 		if (no_sqrt) return dist;
 		return Math.sqrt(dist);
 	},
 
-  getUnitVector: function (segment) {
+  getUnitVector: (vector) => {
+    const mag = MathHelpers.getMagnitude(vector);
+    return {
+      x: vector.x / mag,
+      y: vector.y / mag,
+    };
+  },
+
+  getUnitVectorSegment: (segment) => {
     let vector = {
       x: segment.p2.x - segment.p1.x,
       y: segment.p2.y - segment.p1.y,
@@ -55,7 +63,7 @@ const MathHelpers = {
     };
   },
 
-  getIntersection (r, s) {
+  getIntersection: (r, s) => {
     if ((r.dx / r.dy) == (s.dx / s.dy)) return null;
 
     const t2 = (r.dx * (s.py - r.py) + r.dy * (r.px - s.px)) / (s.dx * r.dy - s.dy * r.dx);
@@ -138,7 +146,7 @@ const MathHelpers = {
     return MathHelpers.distanceToLine(point, item);
   },
 
-  distanceToLine: function (point, item) {
+  distanceToLine: (point, item) => {
     const A = point.x - item.p1.x;
     const B = point.y - item.p1.y;
     const C = item.p2.x - item.p1.x;
@@ -170,15 +178,15 @@ const MathHelpers = {
     }
   },
 
-  getDotProduct: function (v1, v2) {
+  getDotProduct: (v1, v2) => {
     return v1.x * v2.x + v1.y * v2.y;
   },
 
-  getMagnitude: function (v) {
+  getMagnitude: (v) => {
     return Math.sqrt(sqr(v.x) + sqr(v.y));
   },
 
-  getAngleBetweenVectors: function (v1, v2) {
+  getAngleBetweenVectors: (v1, v2) => {
     const dot = MathHelpers.getDotProduct(v1, v2);
     const v1_mag = MathHelpers.getMagnitude(v1);
     const v2_mag = MathHelpers.getMagnitude(v2);
@@ -187,7 +195,7 @@ const MathHelpers = {
     return angle;
   },
 
-  getNormal: function (segment, reference_point) {
+  getNormal: (segment, reference_point) => {
     reference_point = reference_point || Mouse;
     // the "open" normal will be on the side
     // of the reference point, the mouse in most cases
@@ -195,7 +203,7 @@ const MathHelpers = {
     if (segment.segment) segment = segment.segment;
 
     // Get a unit vector of that perpendicular
-    let unit_vector = MathHelpers.getUnitVector(segment);
+    let unit_vector = MathHelpers.getUnitVectorSegment(segment);
 
     let perp_unit_vector = {
       x: unit_vector.y,
@@ -237,12 +245,12 @@ const MathHelpers = {
     };
   },
 
-  getSlope: function (p1, p2) {
+  getSlope: (p1, p2) => {
     return (p2.y - p1.y) / (p2.x - p1.x);
   },
 
-  getPerpendicularUnitVector: function (segment) {
-    let unit_vector = MathHelpers.getUnitVector(segment);
+  getPerpendicularUnitVector: (segment) => {
+    let unit_vector = MathHelpers.getUnitVectorSegment(segment);
     let perp = {
       x: unit_vector.y,
       y: unit_vector.x * -1
@@ -250,7 +258,7 @@ const MathHelpers = {
     return perp;
   },
 
-  getSegmentMiddle: function (segment) {
+  getSegmentMiddle: (segment) => {
     return {
       x: segment.p1.x + ((segment.p2.x - segment.p1.x) * 0.5),
       y: segment.p1.y + ((segment.p2.y - segment.p1.y) * 0.5),

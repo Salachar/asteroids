@@ -124,7 +124,7 @@ class World extends GOB {
     }
 
     spawnAsteroids (params = {}) {
-      const asteroidCount = 8;
+      const asteroidCount = 2;
       const third_width = this.width / 3;
       const third_height = this.height / 3;
       const sectionList = [
@@ -154,14 +154,14 @@ class World extends GOB {
             y: y,
           },
           radius: getRandomInt(60, 90),
-          // velocity: {
-          //   x: 0,
-          //   y: 0,
-          // },
           velocity: {
-            x: getRandom(-1, 1),
-            y: getRandom(-1, 1),
+            x: 0,
+            y: 0,
           },
+          // velocity: {
+          //   x: getRandom(-1, 1),
+          //   y: getRandom(-1, 1),
+          // },
         })
       }
     }

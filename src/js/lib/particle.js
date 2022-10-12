@@ -10,6 +10,7 @@ class Particle extends GOB {
 		super(opts);
 
 		this.type = "particle";
+    this.radius = opts.radius;
     // this.cross_boundary = false;
     this.current_lifetime = 0;
     this.lifetime = opts.lifetime;
@@ -44,7 +45,7 @@ class Particle extends GOB {
       this.context.arc(
         this.x,
         this.y,
-        6,
+        this.radius,
         0,
         TWO_PI,
       );

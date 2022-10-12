@@ -78,7 +78,7 @@ const ColorHelpers = {
   },
 
   getHEX: (color) => {
-    if (color.r && color.g && color.b) {
+    if (color.r || color.g || color.b) {
       return ColorHelpers.RGBtoHEX(color);
     }
     return color;
