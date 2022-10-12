@@ -1600,6 +1600,10 @@ class Asteroid extends GOB {
       let segment = supersegments[i];
       while (!segmentMatch(split_from.segment, segment)) {
         ++i; // ignore everything until we get to the first point
+        if (i > supersegments.length) {
+          console.log('split not found');
+          return;
+        }
         segment = supersegments[i];
       }
       // First match against the "from" segment
@@ -1607,11 +1611,19 @@ class Asteroid extends GOB {
       new_asteroid_one.push(segment.p2);
 
       ++i;
+      if (i > supersegments.length) {
+        console.log('split not found');
+        return;
+      }
       segment = supersegments[i];
 
       while (!segmentMatch(split_to.segment, segment)) {
         new_asteroid_one.push(segment.p2);
         ++i;
+        if (i > supersegments.length) {
+          console.log('split not found');
+          return;
+        }
         segment = supersegments[i];
       }
 
@@ -1622,11 +1634,19 @@ class Asteroid extends GOB {
       new_asteroid_two.push(segment.p2);
 
       ++i;
+      if (i > supersegments.length) {
+        console.log('split not found');
+        return;
+      }
       segment = supersegments[i];
 
       while (!segmentMatch(split_from.segment, segment)) {
         new_asteroid_two.push(segment.p2);
         ++i;
+        if (i > supersegments.length) {
+          console.log('split not found');
+          return;
+        }
         segment = supersegments[i];
       }
 
@@ -2180,10 +2200,10 @@ class Player extends GOB {
 
     this.cannonParticles(playerHeadingVector);
 
-    this.weaponFirable = false;
-    window.setTimeout(() => {
-      this.weaponFirable = true;
-    }, 500);
+    // this.weaponFirable = false;
+    // window.setTimeout(() => {
+    //   this.weaponFirable = true;
+    // }, 500);
   }
 
   cannonParticles (playerHeadingVector) {
@@ -3562,31 +3582,35 @@ const CollisionHelpers = {
     const {
       this_segment,
       prev_this_segment,
-      other_list,
-      other_nested,
+      other_list = [],
+      other_nested = false,
     } = data;
     let collision_info = null;
 
-    if (other_nested) {
-      let segment_collision_info = null;
-      for (let i = 0; i < other_list.length; ++i) {
-        segment_collision_info = CollisionHelpers.castForward({
+    try {
+      if (other_nested) {
+        let segment_collision_info = null;
+        for (let i = 0; i < other_list.length; ++i) {
+          segment_collision_info = CollisionHelpers.castForward({
+            this_segment,
+            prev_this_segment,
+            other_list: other_list[i],
+          });
+          if (segment_collision_info) {
+            // We don't want to overwrite a positive with a negative
+            // when there are multiple lists
+            collision_info = segment_collision_info;
+          }
+        }
+      } else {
+        collision_info = CollisionHelpers.castForward({
           this_segment,
           prev_this_segment,
-          other_list: other_list[i],
+          other_list: other_list,
         });
-        if (segment_collision_info) {
-          // We don't want to overwrite a positive with a negative
-          // when there are multiple lists
-          collision_info = segment_collision_info;
-        }
       }
-    } else {
-      collision_info = CollisionHelpers.castForward({
-        this_segment,
-        prev_this_segment,
-        other_list: other_list,
-      });
+    } catch (e) {
+      console.log(e);
     }
 
     return collision_info;

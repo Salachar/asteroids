@@ -189,10 +189,10 @@ class Player extends GOB {
 
     this.cannonParticles(playerHeadingVector);
 
-    this.weaponFirable = false;
-    window.setTimeout(() => {
-      this.weaponFirable = true;
-    }, 500);
+    // this.weaponFirable = false;
+    // window.setTimeout(() => {
+    //   this.weaponFirable = true;
+    // }, 500);
   }
 
   cannonParticles (playerHeadingVector) {

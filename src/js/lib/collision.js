@@ -250,31 +250,35 @@ const CollisionHelpers = {
     const {
       this_segment,
       prev_this_segment,
-      other_list,
-      other_nested,
+      other_list = [],
+      other_nested = false,
     } = data;
     let collision_info = null;
 
-    if (other_nested) {
-      let segment_collision_info = null;
-      for (let i = 0; i < other_list.length; ++i) {
-        segment_collision_info = CollisionHelpers.castForward({
+    try {
+      if (other_nested) {
+        let segment_collision_info = null;
+        for (let i = 0; i < other_list.length; ++i) {
+          segment_collision_info = CollisionHelpers.castForward({
+            this_segment,
+            prev_this_segment,
+            other_list: other_list[i],
+          });
+          if (segment_collision_info) {
+            // We don't want to overwrite a positive with a negative
+            // when there are multiple lists
+            collision_info = segment_collision_info;
+          }
+        }
+      } else {
+        collision_info = CollisionHelpers.castForward({
           this_segment,
           prev_this_segment,
-          other_list: other_list[i],
+          other_list: other_list,
         });
-        if (segment_collision_info) {
-          // We don't want to overwrite a positive with a negative
-          // when there are multiple lists
-          collision_info = segment_collision_info;
-        }
       }
-    } else {
-      collision_info = CollisionHelpers.castForward({
-        this_segment,
-        prev_this_segment,
-        other_list: other_list,
-      });
+    } catch (e) {
+      console.log(e);
     }
 
     return collision_info;
