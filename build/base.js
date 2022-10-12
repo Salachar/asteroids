@@ -1991,7 +1991,7 @@ class Player extends GOB {
     this.invincible = false;
     this.width = 40; // 2x3
     this.height = 40;
-    this.rotationSpeed = PI / 64;
+    this.rotationSpeed = PI / 72;
 		this.theta = Math.PI / 2;
     this.invincible_time = opts.invincible_time || 0;
 
