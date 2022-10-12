@@ -1576,9 +1576,9 @@ class Asteroid extends GOB {
 
     if (segmentMatch(split_from.segment, split_to.segment)) return;
 
-    this.audioManager.playOnce("thud", {
-      no_ramp_up: true,
-    });
+    // this.audioManager.playOnce("thud", {
+    //   no_ramp_up: true,
+    // });
     Particles.asteroidImpactParticles({
       world: this.world,
       direction: projectile.aim,
