@@ -3451,6 +3451,10 @@ class AudioPlayer {
   }
 
   play () {
+    if (!this.player.src) {
+      console.log('Trying to play a null sourced Audio element');
+      return;
+    }
     if (this.rampDownTimer) {
       // Clear any timers for stopping audio
       window.clearInterval(this.rampDownTimer);
@@ -3473,6 +3477,10 @@ class AudioPlayer {
   }
 
   pause () {
+    if (!this.player.src) {
+      console.log('Trying to pause a null sourced Audio element');
+      return;
+    }
     if (this.rampUpTimer) {
       // Clear any timers for starting audio
       window.clearInterval(this.rampUpTimer);
