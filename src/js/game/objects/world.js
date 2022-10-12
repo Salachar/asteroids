@@ -3,6 +3,8 @@ const GIM = require('core/game-input-manager');
 const GOB = require('core/game-object-base');
 const CFG = require('../game-config');
 
+const AudioManager = require('audio-manager');
+
 const Segment = require('segment');
 
 const Player = require('game/objects/player');
@@ -33,6 +35,8 @@ class World extends GOB {
       this.background_objects = [];
 
       this.player = null;
+
+      this.audioManager = new AudioManager();
 
       this.generateWorld();
 

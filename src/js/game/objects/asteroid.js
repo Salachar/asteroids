@@ -30,13 +30,13 @@ class Asteroid extends GOB {
       this.calculateBaseProps();
     }
 
-    this.audioManager = new AudioManager({
-      thud: {
-        src: thudSound,
-        loop: false,
-        volume: 0.3,
-      },
-    })
+    // this.audioManager = new AudioManager({
+    //   thud: {
+    //     src: thudSound,
+    //     loop: false,
+    //     volume: 0.3,
+    //   },
+    // })
 
     this.generateSegments();
     return this;
@@ -333,7 +333,7 @@ class Asteroid extends GOB {
 
     if (segmentMatch(split_from.segment, split_to.segment)) return;
 
-    this.audioManager.playOnce("thud", {
+    this.world.audioManager.playOnce("thud", {
       no_ramp_up: true,
     });
     Particles.asteroidImpactParticles({

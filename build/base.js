@@ -1279,13 +1279,13 @@ class Asteroid extends GOB {
       this.calculateBaseProps();
     }
 
-    this.audioManager = new AudioManager({
-      thud: {
-        src: thudSound,
-        loop: false,
-        volume: 0.3,
-      },
-    })
+    // this.audioManager = new AudioManager({
+    //   thud: {
+    //     src: thudSound,
+    //     loop: false,
+    //     volume: 0.3,
+    //   },
+    // })
 
     this.generateSegments();
     return this;
@@ -1582,7 +1582,7 @@ class Asteroid extends GOB {
 
     if (segmentMatch(split_from.segment, split_to.segment)) return;
 
-    this.audioManager.playOnce("thud", {
+    this.world.audioManager.playOnce("thud", {
       no_ramp_up: true,
     });
     Particles.asteroidImpactParticles({
@@ -2097,10 +2097,10 @@ const AudioManager = __webpack_require__(330);
 const Projectile = __webpack_require__(700);
 const Segment = __webpack_require__(394);
 
-const thrusterSound = __webpack_require__(971);
-const laserSound = __webpack_require__(331);
-const explosionSound = __webpack_require__(403);
-const goldSound = __webpack_require__(616);
+// const thrusterSound = require('sounds/thrusters.mp3');
+// const laserSound = require('sounds/laser.mp3');
+// const explosionSound = require('sounds/explosion.mp3');
+// const goldSound = require('sounds/gold.mp3');
 
 const { PI, HALF_PI,
   clampRadians,
@@ -2143,28 +2143,28 @@ class Player extends GOB {
       power: 0.085,
     };
 
-    this.audioManager = new AudioManager({
-      thruster: {
-        src: thrusterSound,
-        loop: true,
-        volume: 0.65,
-      },
-      laser: {
-        src: laserSound,
-        loop: false,
-        volume: 0.03,
-      },
-      explosion: {
-        src: explosionSound,
-        loop: false,
-        volume: 0.2,
-      },
-      gold: {
-        src: goldSound,
-        loop: false,
-        volume: 0.2,
-      },
-    })
+    // this.audioManager = new AudioManager({
+    //   thruster: {
+    //     src: thrusterSound,
+    //     loop: true,
+    //     volume: 0.65,
+    //   },
+    //   laser: {
+    //     src: laserSound,
+    //     loop: false,
+    //     volume: 0.03,
+    //   },
+    //   explosion: {
+    //     src: explosionSound,
+    //     loop: false,
+    //     volume: 0.2,
+    //   },
+    //   gold: {
+    //     src: goldSound,
+    //     loop: false,
+    //     volume: 0.2,
+    //   },
+    // })
 
     this.weaponFirable = true;
     this.weaponTimer = null;
@@ -2228,11 +2228,11 @@ class Player extends GOB {
     this.theta = clampRadians(this.theta);
 
     if (this.thrust.active) {
-      this.audioManager.players.thruster.play();
+      this.world.audioManager.players.thruster.play();
       this.velocity.x += (playerHeadingVector.x * this.thrust.power);
       this.velocity.y += (playerHeadingVector.y * this.thrust.power);
     } else {
-      this.audioManager.players.thruster.pause();
+      this.world.audioManager.players.thruster.pause();
     }
 
     const velMag = getMagnitude(this.velocity);
@@ -2267,7 +2267,7 @@ class Player extends GOB {
     if (!this.weaponFirable) return;
 
     const playerHeadingVector = this.getPlayerHeadingVector();
-    this.audioManager.playOnce("laser");
+    this.world.audioManager.playOnce("laser");
     new Projectile({
       world: this.world,
       layer: GOM.front,
@@ -2313,7 +2313,8 @@ class Player extends GOB {
     const { other_obj } = collision_data;
     if (other_obj.type === 'asteroid') {
       if (other_obj.radius <= this.radius) {
-        this.audioManager.pauseAll().playOnce("gold");
+        // this.world.audioManager.pauseAll().playOnce("gold");
+        this.world.audioManager.playOnce("gold");
         Particles.pickupGoldParticles({
           world: this.world,
           direction: getUnitVector({
@@ -2344,7 +2345,8 @@ class Player extends GOB {
 
         this.world.handlePlayerDeath();
         // Pause all playing audio (mainly thrusters)
-        this.audioManager.pauseAll().playOnce("explosion");
+        // this.world.audioManager.pauseAll().playOnce("explosion");
+        this.world.audioManager.playOnce("explosion");
         // Don't render the player anymore. If I go with the
         // segmented death, they will be new objects, not part
         // of the player
@@ -2611,6 +2613,8 @@ const GIM = __webpack_require__(443);
 const GOB = __webpack_require__(406);
 const CFG = __webpack_require__(78);
 
+const AudioManager = __webpack_require__(330);
+
 const Segment = __webpack_require__(824);
 
 const Player = __webpack_require__(935);
@@ -2641,6 +2645,8 @@ class World extends GOB {
       this.background_objects = [];
 
       this.player = null;
+
+      this.audioManager = new AudioManager();
 
       this.generateWorld();
 
@@ -3397,14 +3403,48 @@ module.exports = Arc;
 
 const AudioPlayer = __webpack_require__(497);
 
+const thrusterSound = __webpack_require__(971);
+const laserSound = __webpack_require__(331);
+const explosionSound = __webpack_require__(403);
+const goldSound = __webpack_require__(616);
+const thudSound = __webpack_require__(604);
+
+const TRACKS = {
+  thruster: {
+    src: thrusterSound,
+    loop: true,
+    volume: 0.65,
+  },
+  laser: {
+    src: laserSound,
+    loop: false,
+    volume: 0.03,
+  },
+  explosion: {
+    src: explosionSound,
+    loop: false,
+    volume: 0.2,
+  },
+  gold: {
+    src: goldSound,
+    loop: false,
+    volume: 0.2,
+  },
+  thud: {
+    src: thudSound,
+    loop: false,
+    volume: 0.3,
+  },
+};
+
 class AudioManager {
-  constructor (tracks = {}) {
-    this.tracks = tracks;
+  constructor () {
+    this.tracks = TRACKS;
 
     this.players = {};
 
-    Object.keys(tracks).forEach((trackName) => {
-      this.players[trackName] = new AudioPlayer(tracks[trackName]);
+    Object.keys(this.tracks).forEach((trackName) => {
+      this.players[trackName] = new AudioPlayer(this.tracks[trackName]);
     });
   }
 

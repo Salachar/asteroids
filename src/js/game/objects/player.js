@@ -12,10 +12,10 @@ const AudioManager = require('audio-manager');
 const Projectile = require('./projectile');
 const Segment = require('./segment');
 
-const thrusterSound = require('sounds/thrusters.mp3');
-const laserSound = require('sounds/laser.mp3');
-const explosionSound = require('sounds/explosion.mp3');
-const goldSound = require('sounds/gold.mp3');
+// const thrusterSound = require('sounds/thrusters.mp3');
+// const laserSound = require('sounds/laser.mp3');
+// const explosionSound = require('sounds/explosion.mp3');
+// const goldSound = require('sounds/gold.mp3');
 
 const { PI, HALF_PI,
   clampRadians,
@@ -58,28 +58,28 @@ class Player extends GOB {
       power: 0.085,
     };
 
-    this.audioManager = new AudioManager({
-      thruster: {
-        src: thrusterSound,
-        loop: true,
-        volume: 0.65,
-      },
-      laser: {
-        src: laserSound,
-        loop: false,
-        volume: 0.03,
-      },
-      explosion: {
-        src: explosionSound,
-        loop: false,
-        volume: 0.2,
-      },
-      gold: {
-        src: goldSound,
-        loop: false,
-        volume: 0.2,
-      },
-    })
+    // this.audioManager = new AudioManager({
+    //   thruster: {
+    //     src: thrusterSound,
+    //     loop: true,
+    //     volume: 0.65,
+    //   },
+    //   laser: {
+    //     src: laserSound,
+    //     loop: false,
+    //     volume: 0.03,
+    //   },
+    //   explosion: {
+    //     src: explosionSound,
+    //     loop: false,
+    //     volume: 0.2,
+    //   },
+    //   gold: {
+    //     src: goldSound,
+    //     loop: false,
+    //     volume: 0.2,
+    //   },
+    // })
 
     this.weaponFirable = true;
     this.weaponTimer = null;
@@ -143,11 +143,11 @@ class Player extends GOB {
     this.theta = clampRadians(this.theta);
 
     if (this.thrust.active) {
-      this.audioManager.players.thruster.play();
+      this.world.audioManager.players.thruster.play();
       this.velocity.x += (playerHeadingVector.x * this.thrust.power);
       this.velocity.y += (playerHeadingVector.y * this.thrust.power);
     } else {
-      this.audioManager.players.thruster.pause();
+      this.world.audioManager.players.thruster.pause();
     }
 
     const velMag = getMagnitude(this.velocity);
@@ -182,7 +182,7 @@ class Player extends GOB {
     if (!this.weaponFirable) return;
 
     const playerHeadingVector = this.getPlayerHeadingVector();
-    this.audioManager.playOnce("laser");
+    this.world.audioManager.playOnce("laser");
     new Projectile({
       world: this.world,
       layer: GOM.front,
@@ -228,7 +228,8 @@ class Player extends GOB {
     const { other_obj } = collision_data;
     if (other_obj.type === 'asteroid') {
       if (other_obj.radius <= this.radius) {
-        this.audioManager.pauseAll().playOnce("gold");
+        // this.world.audioManager.pauseAll().playOnce("gold");
+        this.world.audioManager.playOnce("gold");
         Particles.pickupGoldParticles({
           world: this.world,
           direction: getUnitVector({
@@ -259,7 +260,8 @@ class Player extends GOB {
 
         this.world.handlePlayerDeath();
         // Pause all playing audio (mainly thrusters)
-        this.audioManager.pauseAll().playOnce("explosion");
+        // this.world.audioManager.pauseAll().playOnce("explosion");
+        this.world.audioManager.playOnce("explosion");
         // Don't render the player anymore. If I go with the
         // segmented death, they will be new objects, not part
         // of the player
