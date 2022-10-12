@@ -126,6 +126,10 @@ canvas {
 	padding: 20px;
 }
 
+.version {
+  text-align: right;
+}
+
 .title {
   font-family: Warnes;
   font-size: 30px;
