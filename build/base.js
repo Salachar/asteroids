@@ -1991,7 +1991,7 @@ class Player extends GOB {
     this.invincible = false;
     this.width = 40; // 2x3
     this.height = 40;
-    this.rotationSpeed = PI / 48;
+    this.rotationSpeed = PI / 64;
 		this.theta = Math.PI / 2;
     this.invincible_time = opts.invincible_time || 0;
 
@@ -2010,7 +2010,7 @@ class Player extends GOB {
     this.max_speed = 6;
     this.thrust = {
       active: false,
-      power: 0.075,
+      power: 0.085,
     };
 
     this.audioManager = new AudioManager({
