@@ -54,22 +54,22 @@ class Player extends GOB {
 
     this.audioManager = new AudioManager({
       thruster: {
-        src: require('sounds/thrusters.mp3'),
+        src: require('../../../sounds/thrusters.mp3'),
         loop: true,
         volume: 0.65,
       },
       laser: {
-        src: require('sounds/laser.mp3'),
+        src: require('../../../sounds/laser.mp3'),
         loop: false,
         volume: 0.03,
       },
       explosion: {
-        src: require('sounds/explosion.mp3'),
+        src: require('../../../sounds/explosion.mp3'),
         loop: false,
         volume: 0.2,
       },
       gold: {
-        src: require('sounds/gold.mp3'),
+        src: require('../../../sounds/gold.mp3'),
         loop: false,
         volume: 0.2,
       },

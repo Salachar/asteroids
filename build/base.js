@@ -29,6 +29,13 @@ module.exports = __webpack_require__.p + "src/sounds/thrusters.mp3";
 
 /***/ }),
 
+/***/ 604:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+module.exports = __webpack_require__.p + "src/sounds/thud3.mp3";
+
+/***/ }),
+
 /***/ 443:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
@@ -1266,13 +1273,13 @@ class Asteroid extends GOB {
       this.calculateBaseProps();
     }
 
-    // this.audioManager = new AudioManager({
-    //   thud: {
-    //     src: require('sounds/thud3.mp3'),
-    //     loop: false,
-    //     volume: 0.3,
-    //   },
-    // })
+    this.audioManager = new AudioManager({
+      thud: {
+        src: __webpack_require__(604),
+        loop: false,
+        volume: 0.3,
+      },
+    })
 
     this.generateSegments();
     return this;
@@ -1569,9 +1576,9 @@ class Asteroid extends GOB {
 
     if (segmentMatch(split_from.segment, split_to.segment)) return;
 
-    // this.audioManager.playOnce("thud", {
-    //   no_ramp_up: true,
-    // });
+    this.audioManager.playOnce("thud", {
+      no_ramp_up: true,
+    });
     Particles.asteroidImpactParticles({
       world: this.world,
       direction: projectile.aim,
