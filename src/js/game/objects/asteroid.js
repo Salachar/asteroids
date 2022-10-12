@@ -28,13 +28,13 @@ class Asteroid extends GOB {
       this.calculateBaseProps();
     }
 
-    this.audioManager = new AudioManager({
-      thud: {
-        src: require('sounds/thud3.mp3'),
-        loop: false,
-        volume: 0.3,
-      },
-    })
+    // this.audioManager = new AudioManager({
+    //   thud: {
+    //     src: require('sounds/thud3.mp3'),
+    //     loop: false,
+    //     volume: 0.3,
+    //   },
+    // })
 
     this.generateSegments();
     return this;
