@@ -1,4 +1,4 @@
-const Particles = require('lib/particles');
+const ParticleSystem = require('lib/particle-system');
 const { color } = require('lib/color');
 const { rotatePointCounterClockwise } = require('math');
 
@@ -108,17 +108,8 @@ const FuturamaStyles = {
     ]);
   },
 
-  getAsteroidStyle () {
-    return {
-      fill: true,
-      close: true,
-      color: color(238,118,0),
-      highlight: color(255, 255, 255),
-    };
-  },
-
   thrustParticles (game_obj, unitVector) {
-    new Particles({
+    new ParticleSystem({
       world: game_obj.world,
       neon: true,
       amount: 3,

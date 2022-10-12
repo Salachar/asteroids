@@ -1,3 +1,7 @@
+const { TWO_PI,
+  rotatePointCounterClockwise,
+} = require('./math');
+
 const RandomHelpers = {
   getRandom: (min, max) => {
     return Math.random() * (max - min) + min;
@@ -15,6 +19,17 @@ const RandomHelpers = {
 
   getRandomPercentage: () => {
     return RandomHelpers.getRandomInt(0,100);
+  },
+
+  getRandomAngle: () => {
+    return RandomHelpers.getRandom(0, TWO_PI);
+  },
+
+  getRandomUnitVector: () => {
+    return rotatePointCounterClockwise({
+      x: 0,
+      y: 1,
+    }, RandomHelpers.getRandomAngle());
   },
 
   getPercentileRoll: (threshhold = 50) => {

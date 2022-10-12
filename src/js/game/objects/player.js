@@ -2,6 +2,7 @@ const GOM = require('core/game-object-manager');
 const GIM = require('core/game-input-manager');
 const GOB = require('core/game-object-base');
 const CFG = require('../game-config');
+const Particles = require('../styles/particles');
 
 const SanloStyles = require('../styles/sanlo');
 const FuturamaStyles = require('../styles/futurama');
@@ -9,12 +10,15 @@ const ClassicStyles = require('../styles/classic');
 
 const AudioManager = require('audio-manager');
 const Projectile = require('./projectile');
+const Segment = require('./segment');
+
 const { PI, HALF_PI,
   clampRadians,
   getMagnitude,
   getUnitVector,
   rotatePointCounterClockwise,
  } = require('math');
+ const { getRandomUnitVector } = require('lib/random');
 
 class Player extends GOB {
 	constructor (opts = {}) {
@@ -214,11 +218,12 @@ class Player extends GOB {
   }
 
   resolveCollision (collision_point, collision_data) {
+    if (this.resolved) return;
     const { other_obj } = collision_data;
     if (other_obj.type === 'asteroid') {
       if (other_obj.radius <= this.radius) {
         this.audioManager.pauseAll().playOnce("gold");
-        SanloStyles.pickupGoldParticles({
+        Particles.pickupGoldParticles({
           world: this.world,
           direction: getUnitVector({
             x: this.x - other_obj.x,
@@ -229,6 +234,19 @@ class Player extends GOB {
         });
         other_obj.shutdown();
       } else {
+        this.resolved = true;
+
+        this.perSegment((segment, config) => {
+          if (segment.type === 'arc') return;
+          new Segment({
+            world: this.world,
+            baseVelocity: this.velocity,
+            direction: getRandomUnitVector(),
+            segment,
+            config,
+          });
+        });
+
         this.world.handlePlayerDeath();
         // Pause all playing audio (mainly thrusters)
         this.audioManager.pauseAll().playOnce("explosion");

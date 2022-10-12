@@ -228,8 +228,6 @@ class GOB {
     this.render = true;
 		this.configured = true;
 
-    this.theme = CFG.theme;
-
     this.type = opts.type || "";
     this.renderType = opts.renderType || "canvas";
     this.htmlElement = null;
@@ -762,6 +760,43 @@ class GOB {
     // to be overwritten by individual game objects
   }
 
+  perSegment (callback) {
+    const {
+      segments = {},
+      aesthetics = {},
+    } = this.getSegments();
+
+    const createSegmentObjectsFromList = (segmentsList) => {
+      if (!segmentsList.length) return;
+
+      let config = {};
+      if (!(segmentsList[0] instanceof Segment) && !(segmentsList[0] instanceof Arc)) {
+        config = segmentsList.shift();
+      }
+
+      segmentsList.forEach((segment) => {
+        callback(segment, config);
+      });
+    }
+
+    const degmentizeList = (segmentsInfo) => {
+      const {
+        nested = false,
+        list = [],
+      } = segmentsInfo;
+      if (!nested) {
+        createSegmentObjectsFromList(list);
+      } else {
+        list.forEach((subList) => {
+          createSegmentObjectsFromList(subList);
+        });
+      }
+    }
+
+    degmentizeList(segments);
+    degmentizeList(aesthetics);
+  }
+
   draw (opts = {}) {
     const c = this.context;
     const { shift = {} } = opts;
@@ -793,14 +828,7 @@ class GOB {
           segments[0].data.radius,
           0, 2 * Math.PI);
         c.closePath();
-        switch (CFG.theme) {
-          case 'classic':
-            whiteStroke(c);
-            break;
-          default: // "neon"
-            neonStroke(c, config);
-            break;
-        }
+        neonStroke(c, config);
       c.restore();
       return;
     }
@@ -812,14 +840,7 @@ class GOB {
           c.lineTo(segment.p2.x, segment.p2.y);
         });
       c.closePath();
-      switch (CFG.theme) {
-        case 'classic':
-          whiteStroke(c);
-          break;
-        default: // "neon"
-          neonStroke(c, config);
-          break;
-      }
+      neonStroke(c, config);
     c.restore();
   }
 
@@ -1139,7 +1160,6 @@ module.exports = new GOM();
 class CONFIG {
   constructor () {
     this.ship = 'sanlo'; // 'classic'
-    this.theme = 'sanlo'; // 'classic'
     this.draw_bounding_circle = false;
     this.draw_center_point = false;
   }
@@ -1205,18 +1225,6 @@ class Menu {
       CFG.ship = e.currentTarget.value;
     });
 
-    document.getElementById('config_theme_sanlo').addEventListener('change', (e) => {
-      CFG.theme = e.currentTarget.value;
-    });
-
-    document.getElementById('config_theme_futurama').addEventListener('change', (e) => {
-      CFG.theme = e.currentTarget.value;
-    });
-
-    document.getElementById('config_theme_classic').addEventListener('change', (e) => {
-      CFG.theme = e.currentTarget.value;
-    });
-
     document.getElementById('draw_bounding_circle').addEventListener('change', (e) => {
       CFG.draw_bounding_circle = e.currentTarget.checked;
     });
@@ -1239,9 +1247,7 @@ const GOM = __webpack_require__(39);
 const GOB = __webpack_require__(406);
 const CFG = __webpack_require__(78);
 
-const SanloStyles = __webpack_require__(868);
-const FuturamaStyles = __webpack_require__(897);
-const ClassicStyles = __webpack_require__(194);
+const Particles = __webpack_require__(349);
 
 const { color } = __webpack_require__(293);
 
@@ -1329,9 +1335,7 @@ class Asteroid extends GOB {
     });
 
     if (this.radius < (this.world.player.radius / 3)) {
-      // TODO a particle effect or something for indicator
-      console.log(this.owner_size)
-      SanloStyles.asteroidExplosionParticles({
+      Particles.asteroidExplosionParticles({
         world: this.world,
         direction: 'circular',
         spawn: this.center,
@@ -1349,7 +1353,6 @@ class Asteroid extends GOB {
   }
 
   getSegmentStyle () {
-    this.theme = CFG.theme;
     if (this.radius <= this.world.player.radius) {
       return {
         fill: color(255, 215, 0),
@@ -1357,14 +1360,12 @@ class Asteroid extends GOB {
         color: color(255, 215, 0),
       };
     }
-    switch (CFG.theme) {
-      case 'classic':
-        return ClassicStyles.getAsteroidStyle();
-      case 'futurama':
-        return FuturamaStyles.getAsteroidStyle();
-      default: // "sanlo"
-        return SanloStyles.getAsteroidStyle();
-    }
+    return {
+      fill: true,
+      close: true,
+      color: color(213, 72, 168),
+      highlight: color(247, 195, 205),
+    };
   }
 
   generateSegments () {
@@ -1456,9 +1457,6 @@ class Asteroid extends GOB {
   }
 
 	update () {
-    if (CFG.theme !== this.theme) {
-      this.generateSegments();
-    }
 		this.theta += this.rotationSpeed;
     this.theta = clampRadians(this.theta);
 		this.x += this.velocity.x;
@@ -1581,7 +1579,7 @@ class Asteroid extends GOB {
     this.audioManager.playOnce("thud", {
       no_ramp_up: true,
     });
-    SanloStyles.asteroidImpactParticles({
+    Particles.asteroidImpactParticles({
       world: this.world,
       direction: projectile.aim,
       spawn: collision_point,
@@ -2013,6 +2011,7 @@ const GOM = __webpack_require__(39);
 const GIM = __webpack_require__(443);
 const GOB = __webpack_require__(406);
 const CFG = __webpack_require__(78);
+const Particles = __webpack_require__(349);
 
 const SanloStyles = __webpack_require__(868);
 const FuturamaStyles = __webpack_require__(897);
@@ -2020,12 +2019,15 @@ const ClassicStyles = __webpack_require__(194);
 
 const AudioManager = __webpack_require__(330);
 const Projectile = __webpack_require__(700);
+const Segment = __webpack_require__(394);
+
 const { PI, HALF_PI,
   clampRadians,
   getMagnitude,
   getUnitVector,
   rotatePointCounterClockwise,
  } = __webpack_require__(488);
+ const { getRandomUnitVector } = __webpack_require__(66);
 
 class Player extends GOB {
 	constructor (opts = {}) {
@@ -2225,11 +2227,12 @@ class Player extends GOB {
   }
 
   resolveCollision (collision_point, collision_data) {
+    if (this.resolved) return;
     const { other_obj } = collision_data;
     if (other_obj.type === 'asteroid') {
       if (other_obj.radius <= this.radius) {
         this.audioManager.pauseAll().playOnce("gold");
-        SanloStyles.pickupGoldParticles({
+        Particles.pickupGoldParticles({
           world: this.world,
           direction: getUnitVector({
             x: this.x - other_obj.x,
@@ -2240,6 +2243,19 @@ class Player extends GOB {
         });
         other_obj.shutdown();
       } else {
+        this.resolved = true;
+
+        this.perSegment((segment, config) => {
+          if (segment.type === 'arc') return;
+          new Segment({
+            world: this.world,
+            baseVelocity: this.velocity,
+            direction: getRandomUnitVector(),
+            segment,
+            config,
+          });
+        });
+
         this.world.handlePlayerDeath();
         // Pause all playing audio (mainly thrusters)
         this.audioManager.pauseAll().playOnce("explosion");
@@ -2401,6 +2417,106 @@ module.exports = Projectile;
 
 /***/ }),
 
+/***/ 394:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+const GOM = __webpack_require__(39);
+const GOB = __webpack_require__(406);
+const CFG = __webpack_require__(78);
+
+const Particles = __webpack_require__(349);
+
+const { color } = __webpack_require__(293);
+
+const { coinFlip, getRandom, getRandomInt, getPercentileRoll } = __webpack_require__(66);
+const { TWO_PI, PI, segmentMatch, clampRadians, rotatePointClockwise, rotatePointCounterClockwise, getMagnitude } = __webpack_require__(488);
+const { checkRaySegmentIntersection } = __webpack_require__(90);
+
+class Segment extends GOB {
+	constructor (opts = {}) {
+		super(opts);
+
+    // Will commonly be spawned by an object being desegmented
+    // and will come in with a segment and the config data
+    // for how to draw it
+    this.config = opts.config || null;
+    this.segment = opts.segment || null;
+
+    if (!this.segment) {
+      console.error('YOU CANT CREATE A SEGMENT WITHOUT A SEGMENT!!!');
+    }
+
+		this.type = "segment";
+    this.collidable = opts.collidable || false;
+    this.rotationSpeed = opts.rotationSpeed || (PI / 480);
+
+    this.speed = opts.speed || 1;
+    this.direction = opts.direction || {
+      x: 0,
+      y: 0,
+    };
+    this.velocity = {
+      x: opts.baseVelocity.x + (this.speed * this.direction.x),
+      y: opts.baseVelocity.y + (this.speed * this.direction.y),
+    };
+
+		this.z = 1000000;
+    this.length = 10;
+
+    this.calculateBaseProps();
+    this.generateSegments();
+
+    window.setTimeout(() => {
+      this.shutdown();
+    }, 700)
+
+		return this;
+	}
+
+  calculateBaseProps () {
+    const p1 = this.segment.p1;
+    const p2 = this.segment.p1;
+		this.width = Math.abs(p2.x - p1.x);
+		this.height = Math.abs(p2.y - p1.y);
+    const trueX = p2.x < p1.x ? p2.x : p1.x;
+    const trueY = p2.y < p1.y ? p2.y : p1.y;
+    this.x = trueX;
+    this.y = trueY;
+  }
+
+  generateSegments () {
+    const p1 = this.segment.p1;
+    const p2 = this.segment.p2;
+    this.segmentsList = this.createSegments([
+      this.config,
+      { // START
+        x: p1.x - this.center.x,
+        y: p1.y - this.center.y,
+      }, { // END
+        x: p2.x - this.center.x,
+        y: p2.y - this.center.y,
+      }
+    ]);
+    if (!this.config) this.segmentsList.shift();
+  }
+
+	update () {
+    this.theta += this.rotationSpeed;
+    this.theta = clampRadians(this.theta);
+		this.x += this.velocity.x;
+		this.y += this.velocity.y;
+	}
+
+  resolveCollision (collision_point, collision_data) {
+
+  }
+}
+
+module.exports = Segment;
+
+
+/***/ }),
+
 /***/ 505:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
@@ -2436,7 +2552,6 @@ class World extends GOB {
 		  this.height = GOM.canvas_container_height;
 
       this.background_objects = [];
-      this.current_theme = CFG.theme;
 
       this.player = null;
 
@@ -2530,7 +2645,7 @@ class World extends GOB {
     }
 
     spawnAsteroids (params = {}) {
-      const asteroidCount = 2;
+      const asteroidCount = 3;
       const third_width = this.width / 3;
       const third_height = this.height / 3;
       const sectionList = [
@@ -2552,6 +2667,7 @@ class World extends GOB {
         const x = (third_width * spawnMods.x) + getRandomInt(1, third_width);
         const y = (third_height * spawnMods.y) + getRandomInt(1, third_height);
 
+        const initialVelocity = 1;
         new Asteroid({
           ...params,
           world: this,
@@ -2560,14 +2676,14 @@ class World extends GOB {
             y: y,
           },
           radius: getRandomInt(60, 90),
-          velocity: {
-            x: 0,
-            y: 0,
-          },
           // velocity: {
-          //   x: getRandom(-1, 1),
-          //   y: getRandom(-1, 1),
+          //   x: 0,
+          //   y: 0,
           // },
+          velocity: {
+            x: getRandom(-initialVelocity, initialVelocity),
+            y: getRandom(-initialVelocity, initialVelocity),
+          },
         })
       }
     }
@@ -2585,16 +2701,7 @@ class World extends GOB {
     }
 
     update () {
-      if (this.current_theme === CFG.theme) return;
-      this.current_theme = CFG.theme;
-      switch (CFG.theme) {
-        case 'classic':
-          this.hideBackgroundObjects();
-          break;
-        default: // "neon"
-          this.showBackgroundObjects();
-          break;
-      }
+
     }
 }
 
@@ -2606,7 +2713,7 @@ module.exports = World;
 /***/ 194:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-const Particles = __webpack_require__(813);
+const ParticleSystem = __webpack_require__(489);
 const { color } = __webpack_require__(293);
 const { rotatePointCounterClockwise } = __webpack_require__(488);
 
@@ -2655,16 +2762,8 @@ const ClassicStyles = {
     ]);
   },
 
-  getAsteroidStyle () {
-    return {
-      fill: true,
-      close: true,
-      color: color(213, 72, 168),
-    };
-  },
-
   thrustParticles (game_obj, unitVector) {
-    new Particles({
+    new ParticleSystem({
       world: game_obj.world,
       amount: 1,
       color: {
@@ -2701,7 +2800,7 @@ module.exports = ClassicStyles;
 /***/ 897:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-const Particles = __webpack_require__(813);
+const ParticleSystem = __webpack_require__(489);
 const { color } = __webpack_require__(293);
 const { rotatePointCounterClockwise } = __webpack_require__(488);
 
@@ -2811,17 +2910,8 @@ const FuturamaStyles = {
     ]);
   },
 
-  getAsteroidStyle () {
-    return {
-      fill: true,
-      close: true,
-      color: color(238,118,0),
-      highlight: color(255, 255, 255),
-    };
-  },
-
   thrustParticles (game_obj, unitVector) {
-    new Particles({
+    new ParticleSystem({
       world: game_obj.world,
       neon: true,
       amount: 3,
@@ -2857,12 +2947,122 @@ module.exports = FuturamaStyles;
 
 /***/ }),
 
+/***/ 349:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+const ParticleSystem = __webpack_require__(489);
+const { color } = __webpack_require__(293);
+const { HALF_PI } = __webpack_require__(488);
+
+const Particles = {
+  asteroidImpactParticles (opts = {}) {
+    const {
+      world,
+      direction,
+      spawn,
+      baseVelocity,
+    } = opts;
+
+    new ParticleSystem({
+      world,
+      neon: true,
+      amount: 9,
+      radius: 3,
+      color: {
+        value: color(255, 255, 255),
+        to: color(213, 72, 168),
+      },
+      particleLifetime: {
+        value: 200,
+        random: [0.6, 1.2],
+      },
+      spawn,
+      baseVelocity,
+      speed: {
+        value: 2,
+        random: [0.5, 1.25],
+      },
+      aim: {
+        x: direction.x * -1,
+        y: direction.y * -1,
+        random: [-0.2, 0.2],
+      },
+    });
+  },
+
+  asteroidExplosionParticles (opts = {}) {
+    const {
+      world,
+      color,
+      spawn,
+    } = opts;
+
+    new ParticleSystem({
+      world,
+      neon: true,
+      amount: 20,
+      radius: 8,
+      color: color,
+      particleLifetime: {
+        value: 200,
+        random: [0.6, 1.2],
+      },
+      spawn,
+      baseVelocity: {
+        x: 0,
+        y: 0,
+      },
+      speed: {
+        value: 1.75,
+        random: [1, 1.25],
+      },
+      aim: {
+        x: 1,
+        y: 0,
+        random: [-HALF_PI, HALF_PI],
+      },
+    });
+  },
+
+  pickupGoldParticles (opts = {}) {
+    const {
+      world,
+      direction,
+      spawn,
+    } = opts;
+
+    new ParticleSystem({
+      world,
+      neon: true,
+      amount: 20,
+      radius: 1,
+      color: {
+        value: color(255, 255, 255),
+        to: color(255, 215, 0),
+      },
+      particleLifetime: 200,
+      spawn,
+      baseVelocity: {
+        x: 0,
+        y: 0,
+      },
+      speed: 1.5,
+      aim: direction,
+    });
+  },
+};
+
+module.exports = Particles;
+
+
+/***/ }),
+
 /***/ 868:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-const Particles = __webpack_require__(813);
+const ParticleSystem = __webpack_require__(489);
 const { color } = __webpack_require__(293);
-const { HALF_PI, rotatePointCounterClockwise } = __webpack_require__(488);
+const { rotatePointCounterClockwise } = __webpack_require__(488);
 
 const SanloStyles = {
   generateShip: (game_obj) => {
@@ -2990,17 +3190,8 @@ const SanloStyles = {
     ]);
   },
 
-  getAsteroidStyle () {
-    return {
-      fill: true,
-      close: true,
-      color: color(213, 72, 168),
-      highlight: color(247, 195, 205),
-    };
-  },
-
   cannonParticles (game_obj, unitVector) {
-    new Particles({
+    new ParticleSystem({
       world: game_obj.world,
       radius: 3,
       color: {
@@ -3023,7 +3214,7 @@ const SanloStyles = {
   },
 
   thrustParticles (game_obj, unitVector) {
-    new Particles({
+    new ParticleSystem({
       world: game_obj.world,
       neon: true,
       amount: 3,
@@ -3051,103 +3242,6 @@ const SanloStyles = {
         y: unitVector.y * -1,
         random: [-0.2, 0.2],
       },
-    });
-  },
-
-  // asteroidImpactParticles (game_obj, unitVector, collision_point) {
-  asteroidImpactParticles (opts = {}) {
-    const {
-      world,
-      direction,
-      spawn,
-      baseVelocity,
-    } = opts;
-
-    new Particles({
-      world,
-      neon: true,
-      amount: 9,
-      radius: 3,
-      color: {
-        value: color(255, 255, 255),
-        to: color(213, 72, 168),
-      },
-      particleLifetime: {
-        value: 200,
-        random: [0.6, 1.2],
-      },
-      spawn,
-      baseVelocity,
-      speed: {
-        value: 2,
-        random: [0.5, 1.25],
-      },
-      aim: {
-        x: direction.x * -1,
-        y: direction.y * -1,
-        random: [-0.2, 0.2],
-      },
-    });
-  },
-
-  asteroidExplosionParticles (opts = {}) {
-    const {
-      world,
-      color,
-      spawn,
-    } = opts;
-
-    new Particles({
-      world,
-      neon: true,
-      amount: 20,
-      radius: 8,
-      color: color,
-      particleLifetime: {
-        value: 200,
-        random: [0.6, 1.2],
-      },
-      spawn,
-      baseVelocity: {
-        x: 0,
-        y: 0,
-      },
-      speed: {
-        value: 1.75,
-        random: [1, 1.25],
-      },
-      aim: {
-        x: 1,
-        y: 0,
-        random: [-HALF_PI, HALF_PI],
-      },
-    });
-  },
-
-  pickupGoldParticles (opts = {}) {
-    const {
-      world,
-      direction,
-      spawn,
-    } = opts;
-
-    new Particles({
-      world,
-      neon: true,
-      amount: 20,
-      radius: 1,
-      color: {
-        value: color(255, 255, 255),
-        to: color(255, 215, 0),
-      },
-      particleLifetime: 200,
-      spawn,
-      baseVelocity: {
-        x: 0,
-        y: 0,
-      },
-      speed: 1.5,
-      aim: direction,
     });
   },
 }
@@ -4058,9 +4152,9 @@ const MathHelpers = {
   segmentMatch: (s1, s2) => {
     if (!s1 || !s2) return;
     // p1 and p2 match
-    if (pointMatch(s1.p1, s2.p1, 1) && pointMatch(s1.p2, s2.p2, 1)) return true;
+    if (pointMatch(s1.p1, s2.p1, 2) && pointMatch(s1.p2, s2.p2, 2)) return true;
     // opposites match (p1 = p2, p2 = p1)
-    if (pointMatch(s1.p1, s2.p2, 1) && pointMatch(s1.p2, s2.p1, 1)) return true;
+    if (pointMatch(s1.p1, s2.p2, 2) && pointMatch(s1.p2, s2.p1, 2)) return true;
     return false;
   },
 
@@ -4378,6 +4472,102 @@ module.exports = MouseHelpers;
 
 /***/ }),
 
+/***/ 489:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+const GOM = __webpack_require__(39);
+const GOB = __webpack_require__(406);
+
+const Particle = __webpack_require__(322);
+
+const { getRandom } = __webpack_require__(66);
+const { rotatePointCounterClockwise } = __webpack_require__(488);
+
+const setNumberProperty = (property) => {
+  if (typeof property === 'object') return property;
+  return {
+    value: property,
+  };
+};
+
+const setColorProperty = (property) => {
+
+};
+
+class ParticleSystem extends GOB {
+	constructor (opts = {}) {
+		super(opts);
+
+		this.type = "particles";
+    this.cross_boundary = false;
+    this.render = false;
+
+    this.neon = opts.neon || true;
+    this.radius = setNumberProperty(opts.radius || 10);
+    this.speed = setNumberProperty(opts.speed || 0);
+    this.particleLifetime = setNumberProperty(opts.particleLifetime || 200);
+    this.spawnMethod = opts.spawnMethod || 'single';
+    this.amount = opts.amount || 3;
+    this.partcles = [];
+
+    this.generateParticles(opts);
+
+    if (this.spawnMethod === 'single') {
+      this.shutdown();
+    }
+
+		return this;
+	}
+
+  generateParticles (opts) {
+    for (let i = 0; i < this.amount; ++i) {
+      let speedMod = this.speed.value;
+      if (this.speed.random) {
+        speedMod = getRandom(
+          speedMod * this.speed.random[0],
+          speedMod * this.speed.random[1]
+        );
+      }
+
+      let velocity = {
+        x: opts.baseVelocity.x + (speedMod * opts.aim.x),
+        y: opts.baseVelocity.y + (speedMod * opts.aim.y),
+      };
+      if (opts.aim.random) {
+        velocity = rotatePointCounterClockwise(
+          velocity,
+          getRandom(opts.aim.random[0], opts.aim.random[1])
+        );
+      }
+
+      let lifetime = this.particleLifetime.value;
+      if (this.particleLifetime.random) {
+        lifetime = getRandom(
+          lifetime * this.particleLifetime.random[0],
+          lifetime * this.particleLifetime.random[1]
+        );
+      }
+
+      this.partcles.push(new Particle({
+        world: opts.world,
+        radius: this.radius.value,
+        neon: this.neon,
+        color: opts.color,
+        spawn: opts.spawn,
+        velocity,
+        lifetime,
+      }));
+    }
+  }
+
+	update () {}
+}
+
+module.exports = ParticleSystem;
+
+
+/***/ }),
+
 /***/ 322:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
@@ -4462,104 +4652,12 @@ module.exports = Particle;
 
 /***/ }),
 
-/***/ 813:
+/***/ 66:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-const GOM = __webpack_require__(39);
-const GOB = __webpack_require__(406);
-
-const Particle = __webpack_require__(322);
-
-const { getRandom } = __webpack_require__(66);
-const { rotatePointCounterClockwise } = __webpack_require__(488);
-
-const setNumberProperty = (property) => {
-  if (typeof property === 'object') return property;
-  return {
-    value: property,
-  };
-};
-
-const setColorProperty = (property) => {
-
-};
-
-class Particles extends GOB {
-	constructor (opts = {}) {
-		super(opts);
-
-		this.type = "particles";
-    this.cross_boundary = false;
-    this.render = false;
-
-    this.neon = opts.neon || true;
-    this.radius = setNumberProperty(opts.radius || 10);
-    this.speed = setNumberProperty(opts.speed || 0);
-    this.particleLifetime = setNumberProperty(opts.particleLifetime || 200);
-    this.spawnMethod = opts.spawnMethod || 'single';
-    this.amount = opts.amount || 3;
-    this.partcles = [];
-
-    this.generateParticles(opts);
-
-    if (this.spawnMethod === 'single') {
-      this.shutdown();
-    }
-
-		return this;
-	}
-
-  generateParticles (opts) {
-    for (let i = 0; i < this.amount; ++i) {
-      let speedMod = this.speed.value;
-      if (this.speed.random) {
-        speedMod = getRandom(
-          speedMod * this.speed.random[0],
-          speedMod * this.speed.random[1]
-        );
-      }
-
-      let velocity = {
-        x: opts.baseVelocity.x + (speedMod * opts.aim.x),
-        y: opts.baseVelocity.y + (speedMod * opts.aim.y),
-      };
-      if (opts.aim.random) {
-        velocity = rotatePointCounterClockwise(
-          velocity,
-          getRandom(opts.aim.random[0], opts.aim.random[1])
-        );
-      }
-
-      let lifetime = this.particleLifetime.value;
-      if (this.particleLifetime.random) {
-        lifetime = getRandom(
-          lifetime * this.particleLifetime.random[0],
-          lifetime * this.particleLifetime.random[1]
-        );
-      }
-
-      this.partcles.push(new Particle({
-        world: opts.world,
-        radius: this.radius.value,
-        neon: this.neon,
-        color: opts.color,
-        spawn: opts.spawn,
-        velocity,
-        lifetime,
-      }));
-    }
-  }
-
-	update () {}
-}
-
-module.exports = Particles;
-
-
-/***/ }),
-
-/***/ 66:
-/***/ ((module) => {
+const { TWO_PI,
+  rotatePointCounterClockwise,
+} = __webpack_require__(488);
 
 const RandomHelpers = {
   getRandom: (min, max) => {
@@ -4578,6 +4676,17 @@ const RandomHelpers = {
 
   getRandomPercentage: () => {
     return RandomHelpers.getRandomInt(0,100);
+  },
+
+  getRandomAngle: () => {
+    return RandomHelpers.getRandom(0, TWO_PI);
+  },
+
+  getRandomUnitVector: () => {
+    return rotatePointCounterClockwise({
+      x: 0,
+      y: 1,
+    }, RandomHelpers.getRandomAngle());
   },
 
   getPercentileRoll: (threshhold = 50) => {

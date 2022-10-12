@@ -2,9 +2,7 @@ const GOM = require('core/game-object-manager');
 const GOB = require('core/game-object-base');
 const CFG = require('../game-config');
 
-const SanloStyles = require('../styles/sanlo');
-const FuturamaStyles = require('../styles/futurama');
-const ClassicStyles = require('../styles/classic');
+const Particles = require('../styles/particles');
 
 const { color } = require('lib/color');
 
@@ -92,9 +90,7 @@ class Asteroid extends GOB {
     });
 
     if (this.radius < (this.world.player.radius / 3)) {
-      // TODO a particle effect or something for indicator
-      console.log(this.owner_size)
-      SanloStyles.asteroidExplosionParticles({
+      Particles.asteroidExplosionParticles({
         world: this.world,
         direction: 'circular',
         spawn: this.center,
@@ -112,7 +108,6 @@ class Asteroid extends GOB {
   }
 
   getSegmentStyle () {
-    this.theme = CFG.theme;
     if (this.radius <= this.world.player.radius) {
       return {
         fill: color(255, 215, 0),
@@ -120,14 +115,12 @@ class Asteroid extends GOB {
         color: color(255, 215, 0),
       };
     }
-    switch (CFG.theme) {
-      case 'classic':
-        return ClassicStyles.getAsteroidStyle();
-      case 'futurama':
-        return FuturamaStyles.getAsteroidStyle();
-      default: // "sanlo"
-        return SanloStyles.getAsteroidStyle();
-    }
+    return {
+      fill: true,
+      close: true,
+      color: color(213, 72, 168),
+      highlight: color(247, 195, 205),
+    };
   }
 
   generateSegments () {
@@ -219,9 +212,6 @@ class Asteroid extends GOB {
   }
 
 	update () {
-    if (CFG.theme !== this.theme) {
-      this.generateSegments();
-    }
 		this.theta += this.rotationSpeed;
     this.theta = clampRadians(this.theta);
 		this.x += this.velocity.x;
@@ -344,7 +334,7 @@ class Asteroid extends GOB {
     this.audioManager.playOnce("thud", {
       no_ramp_up: true,
     });
-    SanloStyles.asteroidImpactParticles({
+    Particles.asteroidImpactParticles({
       world: this.world,
       direction: projectile.aim,
       spawn: collision_point,

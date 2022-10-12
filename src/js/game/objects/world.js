@@ -30,7 +30,6 @@ class World extends GOB {
 		  this.height = GOM.canvas_container_height;
 
       this.background_objects = [];
-      this.current_theme = CFG.theme;
 
       this.player = null;
 
@@ -124,7 +123,7 @@ class World extends GOB {
     }
 
     spawnAsteroids (params = {}) {
-      const asteroidCount = 2;
+      const asteroidCount = 3;
       const third_width = this.width / 3;
       const third_height = this.height / 3;
       const sectionList = [
@@ -146,6 +145,7 @@ class World extends GOB {
         const x = (third_width * spawnMods.x) + getRandomInt(1, third_width);
         const y = (third_height * spawnMods.y) + getRandomInt(1, third_height);
 
+        const initialVelocity = 1;
         new Asteroid({
           ...params,
           world: this,
@@ -154,14 +154,14 @@ class World extends GOB {
             y: y,
           },
           radius: getRandomInt(60, 90),
-          velocity: {
-            x: 0,
-            y: 0,
-          },
           // velocity: {
-          //   x: getRandom(-1, 1),
-          //   y: getRandom(-1, 1),
+          //   x: 0,
+          //   y: 0,
           // },
+          velocity: {
+            x: getRandom(-initialVelocity, initialVelocity),
+            y: getRandom(-initialVelocity, initialVelocity),
+          },
         })
       }
     }
@@ -179,16 +179,7 @@ class World extends GOB {
     }
 
     update () {
-      if (this.current_theme === CFG.theme) return;
-      this.current_theme = CFG.theme;
-      switch (CFG.theme) {
-        case 'classic':
-          this.hideBackgroundObjects();
-          break;
-        default: // "neon"
-          this.showBackgroundObjects();
-          break;
-      }
+
     }
 }
 

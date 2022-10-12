@@ -17,7 +17,7 @@ const setColorProperty = (property) => {
 
 };
 
-class Particles extends GOB {
+class ParticleSystem extends GOB {
 	constructor (opts = {}) {
 		super(opts);
 
@@ -86,4 +86,4 @@ class Particles extends GOB {
 	update () {}
 }
 
-module.exports = Particles;
+module.exports = ParticleSystem;

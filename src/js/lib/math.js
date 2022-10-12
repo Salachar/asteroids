@@ -25,9 +25,9 @@ const MathHelpers = {
   segmentMatch: (s1, s2) => {
     if (!s1 || !s2) return;
     // p1 and p2 match
-    if (pointMatch(s1.p1, s2.p1, 1) && pointMatch(s1.p2, s2.p2, 1)) return true;
+    if (pointMatch(s1.p1, s2.p1, 2) && pointMatch(s1.p2, s2.p2, 2)) return true;
     // opposites match (p1 = p2, p2 = p1)
-    if (pointMatch(s1.p1, s2.p2, 1) && pointMatch(s1.p2, s2.p1, 1)) return true;
+    if (pointMatch(s1.p1, s2.p2, 2) && pointMatch(s1.p2, s2.p1, 2)) return true;
     return false;
   },
 

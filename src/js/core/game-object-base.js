@@ -45,8 +45,6 @@ class GOB {
     this.render = true;
 		this.configured = true;
 
-    this.theme = CFG.theme;
-
     this.type = opts.type || "";
     this.renderType = opts.renderType || "canvas";
     this.htmlElement = null;
@@ -579,6 +577,43 @@ class GOB {
     // to be overwritten by individual game objects
   }
 
+  perSegment (callback) {
+    const {
+      segments = {},
+      aesthetics = {},
+    } = this.getSegments();
+
+    const createSegmentObjectsFromList = (segmentsList) => {
+      if (!segmentsList.length) return;
+
+      let config = {};
+      if (!(segmentsList[0] instanceof Segment) && !(segmentsList[0] instanceof Arc)) {
+        config = segmentsList.shift();
+      }
+
+      segmentsList.forEach((segment) => {
+        callback(segment, config);
+      });
+    }
+
+    const degmentizeList = (segmentsInfo) => {
+      const {
+        nested = false,
+        list = [],
+      } = segmentsInfo;
+      if (!nested) {
+        createSegmentObjectsFromList(list);
+      } else {
+        list.forEach((subList) => {
+          createSegmentObjectsFromList(subList);
+        });
+      }
+    }
+
+    degmentizeList(segments);
+    degmentizeList(aesthetics);
+  }
+
   draw (opts = {}) {
     const c = this.context;
     const { shift = {} } = opts;
@@ -610,14 +645,7 @@ class GOB {
           segments[0].data.radius,
           0, 2 * Math.PI);
         c.closePath();
-        switch (CFG.theme) {
-          case 'classic':
-            whiteStroke(c);
-            break;
-          default: // "neon"
-            neonStroke(c, config);
-            break;
-        }
+        neonStroke(c, config);
       c.restore();
       return;
     }
@@ -629,14 +657,7 @@ class GOB {
           c.lineTo(segment.p2.x, segment.p2.y);
         });
       c.closePath();
-      switch (CFG.theme) {
-        case 'classic':
-          whiteStroke(c);
-          break;
-        default: // "neon"
-          neonStroke(c, config);
-          break;
-      }
+      neonStroke(c, config);
     c.restore();
   }
 

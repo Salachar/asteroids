@@ -1,4 +1,4 @@
-const Particles = require('lib/particles');
+const ParticleSystem = require('lib/particle-system');
 const { color } = require('lib/color');
 const { rotatePointCounterClockwise } = require('math');
 
@@ -47,16 +47,8 @@ const ClassicStyles = {
     ]);
   },
 
-  getAsteroidStyle () {
-    return {
-      fill: true,
-      close: true,
-      color: color(213, 72, 168),
-    };
-  },
-
   thrustParticles (game_obj, unitVector) {
-    new Particles({
+    new ParticleSystem({
       world: game_obj.world,
       amount: 1,
       color: {

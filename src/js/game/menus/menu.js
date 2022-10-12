@@ -19,18 +19,6 @@ class Menu {
       CFG.ship = e.currentTarget.value;
     });
 
-    document.getElementById('config_theme_sanlo').addEventListener('change', (e) => {
-      CFG.theme = e.currentTarget.value;
-    });
-
-    document.getElementById('config_theme_futurama').addEventListener('change', (e) => {
-      CFG.theme = e.currentTarget.value;
-    });
-
-    document.getElementById('config_theme_classic').addEventListener('change', (e) => {
-      CFG.theme = e.currentTarget.value;
-    });
-
     document.getElementById('draw_bounding_circle').addEventListener('change', (e) => {
       CFG.draw_bounding_circle = e.currentTarget.checked;
     });
