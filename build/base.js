@@ -1599,8 +1599,8 @@ class Asteroid extends GOB {
       while (!segmentMatch(split_from.segment, segment)) {
         ++i; // ignore everything until we get to the first point
         if (i > supersegments.length) {
-          console.log('split not found');
-          debugger;
+          // console.log('split not found');
+          // debugger;
           return;
         }
         segment = supersegments[i];
@@ -1611,8 +1611,8 @@ class Asteroid extends GOB {
 
       ++i;
       if (i > supersegments.length) {
-        console.log('split not found');
-        debugger;
+        // console.log('split not found');
+        // debugger;
         return;
       }
       segment = supersegments[i];
@@ -1621,8 +1621,8 @@ class Asteroid extends GOB {
         new_asteroid_one.push(segment.p2);
         ++i;
         if (i > supersegments.length) {
-          console.log('split not found');
-          debugger;
+          // console.log('split not found');
+          // debugger;
           return;
         }
         segment = supersegments[i];
@@ -1636,8 +1636,8 @@ class Asteroid extends GOB {
 
       ++i;
       if (i > supersegments.length) {
-        console.log('split not found');
-        debugger;
+        // console.log('split not found');
+        // debugger;
         return;
       }
       segment = supersegments[i];
@@ -1646,8 +1646,8 @@ class Asteroid extends GOB {
         new_asteroid_two.push(segment.p2);
         ++i;
         if (i > supersegments.length) {
-          console.log('split not found');
-          debugger;
+          // console.log('split not found');
+          // debugger;
           return;
         }
         segment = supersegments[i];
