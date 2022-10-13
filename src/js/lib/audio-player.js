@@ -20,7 +20,7 @@ class AudioPlayer {
 
   play () {
     if (!this.player.src) {
-      console.log('Trying to play a null sourced Audio element');
+      // console.log('Trying to play a null sourced Audio element');
       return;
     }
     if (this.rampDownTimer) {
@@ -34,7 +34,7 @@ class AudioPlayer {
     // the start quieter but also help eliminate starting pops
     this.player.play();
     this.rampUpTimer = window.setInterval(() => {
-      console.log('play timer for', this.player.src)
+      // console.log('play timer for', this.player.src)
       if (this.player.volume + this.volumeRampSpeed >= this.volume) {
         this.player.volume = this.volume;
         window.clearInterval(this.rampUpTimer);
@@ -47,7 +47,7 @@ class AudioPlayer {
 
   pause () {
     if (!this.player.src) {
-      console.log('Trying to pause a null sourced Audio element');
+      // console.log('Trying to pause a null sourced Audio element');
       return;
     }
     if (this.rampUpTimer) {
@@ -58,7 +58,7 @@ class AudioPlayer {
     // Stop if the player is already paused
     if (this.player.paused || this.rampDownTimer) return;
     this.rampDownTimer = window.setInterval(() => {
-      console.log('pause timer for', this.player.src)
+      // console.log('pause timer for', this.player.src)
       if (this.player.volume - this.volumeRampSpeed <= 0) {
         this.player.volume = 0;
         this.player.pause();
@@ -74,7 +74,7 @@ class AudioPlayer {
     this.player.volume = 0;
     this.player.pause();
     this.player.volume = 0;
-    console.log('shutdown', this.player.src)
+    // console.log('shutdown', this.player.src)
     window.clearInterval(this.rampUpTimer);
     this.rampUpTimer = null;
     window.clearInterval(this.rampDownTimer);
