@@ -199,10 +199,10 @@ class Player extends GOB {
 
     this.cannonParticles(playerHeadingVector);
 
-    this.weaponFirable = false;
-    window.setTimeout(() => {
-      this.weaponFirable = true;
-    }, 500);
+    // this.weaponFirable = false;
+    // window.setTimeout(() => {
+    //   this.weaponFirable = true;
+    // }, 500);
   }
 
   cannonParticles (playerHeadingVector) {
@@ -261,6 +261,7 @@ class Player extends GOB {
         this.world.handlePlayerDeath();
         // Pause all playing audio (mainly thrusters)
         // this.world.audioManager.pauseAll().playOnce("explosion");
+        this.world.audioManager.players.thruster.pause();
         this.world.audioManager.playOnce("explosion");
         // Don't render the player anymore. If I go with the
         // segmented death, they will be new objects, not part

@@ -1595,43 +1595,36 @@ class Asteroid extends GOB {
     try {
       if (this.resolved) return;
 
-
       let supersegments = segments.concat(segments);
       let new_asteroid_one = [];
       let new_asteroid_two = [];
-
       let i = 0;
       let segment = supersegments[i];
-      while (!segmentMatch(split_from.segment, segment)) {
-        ++i; // ignore everything until we get to the first point
+
+      const increment = () => {
+        ++i;
         if (i > supersegments.length) {
-          // console.log('split not found');
-          // debugger;
-          return;
+          console.log('split not found');
+          return null;
         }
-        segment = supersegments[i];
+        return supersegments[i];
+      }
+
+      while (!segmentMatch(split_from.segment, segment)) {
+        // ignore everything until we get to the first point
+        segment = increment();
+        if (!segment) return;
       }
       // First match against the "from" segment
       new_asteroid_one.push(split_from.point);
       new_asteroid_one.push(segment.p2);
-
-      ++i;
-      if (i > supersegments.length) {
-        // console.log('split not found');
-        // debugger;
-        return;
-      }
-      segment = supersegments[i];
+      segment = increment();
+      if (!segment) return;
 
       while (!segmentMatch(split_to.segment, segment)) {
         new_asteroid_one.push(segment.p2);
-        ++i;
-        if (i > supersegments.length) {
-          // console.log('split not found');
-          // debugger;
-          return;
-        }
-        segment = supersegments[i];
+        segment = increment();
+        if (!segment) return;
       }
 
       // First match against the "from" segment
@@ -1640,23 +1633,13 @@ class Asteroid extends GOB {
       new_asteroid_two.push(split_to.point);
       new_asteroid_two.push(segment.p2);
 
-      ++i;
-      if (i > supersegments.length) {
-        // console.log('split not found');
-        // debugger;
-        return;
-      }
-      segment = supersegments[i];
+      segment = increment();
+      if (!segment) return;
 
       while (!segmentMatch(split_from.segment, segment)) {
         new_asteroid_two.push(segment.p2);
-        ++i;
-        if (i > supersegments.length) {
-          // console.log('split not found');
-          // debugger;
-          return;
-        }
-        segment = supersegments[i];
+        segment = increment();
+        if (!segment) return;
       }
 
       // First match against the "from" segment
@@ -2284,10 +2267,10 @@ class Player extends GOB {
 
     this.cannonParticles(playerHeadingVector);
 
-    this.weaponFirable = false;
-    window.setTimeout(() => {
-      this.weaponFirable = true;
-    }, 500);
+    // this.weaponFirable = false;
+    // window.setTimeout(() => {
+    //   this.weaponFirable = true;
+    // }, 500);
   }
 
   cannonParticles (playerHeadingVector) {
@@ -2346,6 +2329,7 @@ class Player extends GOB {
         this.world.handlePlayerDeath();
         // Pause all playing audio (mainly thrusters)
         // this.world.audioManager.pauseAll().playOnce("explosion");
+        this.world.audioManager.players.thruster.pause();
         this.world.audioManager.playOnce("explosion");
         // Don't render the player anymore. If I go with the
         // segmented death, they will be new objects, not part
@@ -2654,11 +2638,9 @@ class World extends GOB {
     }
 
     handlePlayerDeath () {
-      // console.log('player dead');
       if (this.player.dead) return;
       this.player.dead = true;
       window.setTimeout(() => {
-        // console.log('player shutdown');
         this.player.shutdown();
         this.spawnPlayer({
           invincible_time: 3000,
@@ -2745,7 +2727,7 @@ class World extends GOB {
     }
 
     spawnAsteroids (params = {}) {
-      const asteroidCount = 5;
+      const asteroidCount = 1;
       const third_width = this.width / 3;
       const third_height = this.height / 3;
       const sectionList = [
@@ -3066,7 +3048,7 @@ const Particles = {
     new ParticleSystem({
       world,
       neon: true,
-      amount: 9,
+      amount: 3,
       radius: 3,
       color: {
         value: color(255, 255, 255),
@@ -3100,7 +3082,7 @@ const Particles = {
     new ParticleSystem({
       world,
       neon: true,
-      amount: 20,
+      amount: 5,
       radius: 8,
       color: color,
       particleLifetime: {
@@ -3134,8 +3116,8 @@ const Particles = {
     new ParticleSystem({
       world,
       neon: true,
-      amount: 20,
-      radius: 1,
+      amount: 3,
+      radius: 3,
       color: {
         value: color(255, 255, 255),
         to: color(255, 215, 0),
@@ -3293,6 +3275,7 @@ const SanloStyles = {
   cannonParticles (game_obj, unitVector) {
     new ParticleSystem({
       world: game_obj.world,
+      amount: 1,
       radius: 3,
       color: {
         value: color(255, 255, 255),
@@ -3317,7 +3300,7 @@ const SanloStyles = {
     new ParticleSystem({
       world: game_obj.world,
       neon: true,
-      amount: 3,
+      amount: 1,
       radius: 6,
       color: {
         value: color(255, 255, 255),
@@ -3480,9 +3463,10 @@ module.exports = AudioManager;
 class AudioPlayer {
   constructor (track = {}) {
     this.player = new Audio();
-    this.player.src = track.src;
     this.player.loop = track.loop || false;
     this.player.volume = 0;
+    this.player.src = track.src;
+
 
     this.volume = track.volume;
 
@@ -3498,10 +3482,7 @@ class AudioPlayer {
   }
 
   play () {
-    if (!this.player.src) {
-      // console.log('Trying to play a null sourced Audio element');
-      return;
-    }
+    if (!this.player.src) return;
     if (this.rampDownTimer) {
       // Clear any timers for stopping audio
       window.clearInterval(this.rampDownTimer);
@@ -3513,7 +3494,6 @@ class AudioPlayer {
     // the start quieter but also help eliminate starting pops
     this.player.play();
     this.rampUpTimer = window.setInterval(() => {
-      // console.log('play timer for', this.player.src)
       if (this.player.volume + this.volumeRampSpeed >= this.volume) {
         this.player.volume = this.volume;
         window.clearInterval(this.rampUpTimer);
@@ -3525,10 +3505,7 @@ class AudioPlayer {
   }
 
   pause () {
-    if (!this.player.src) {
-      // console.log('Trying to pause a null sourced Audio element');
-      return;
-    }
+    if (!this.player.src) return;
     if (this.rampUpTimer) {
       // Clear any timers for starting audio
       window.clearInterval(this.rampUpTimer);
@@ -3537,7 +3514,6 @@ class AudioPlayer {
     // Stop if the player is already paused
     if (this.player.paused || this.rampDownTimer) return;
     this.rampDownTimer = window.setInterval(() => {
-      // console.log('pause timer for', this.player.src)
       if (this.player.volume - this.volumeRampSpeed <= 0) {
         this.player.volume = 0;
         this.player.pause();
@@ -3553,7 +3529,6 @@ class AudioPlayer {
     this.player.volume = 0;
     this.player.pause();
     this.player.volume = 0;
-    // console.log('shutdown', this.player.src)
     window.clearInterval(this.rampUpTimer);
     this.rampUpTimer = null;
     window.clearInterval(this.rampDownTimer);

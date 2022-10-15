@@ -44,11 +44,9 @@ class World extends GOB {
     }
 
     handlePlayerDeath () {
-      // console.log('player dead');
       if (this.player.dead) return;
       this.player.dead = true;
       window.setTimeout(() => {
-        // console.log('player shutdown');
         this.player.shutdown();
         this.spawnPlayer({
           invincible_time: 3000,
@@ -135,7 +133,7 @@ class World extends GOB {
     }
 
     spawnAsteroids (params = {}) {
-      const asteroidCount = 5;
+      const asteroidCount = 1;
       const third_width = this.width / 3;
       const third_height = this.height / 3;
       const sectionList = [

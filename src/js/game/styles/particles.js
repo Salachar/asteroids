@@ -14,7 +14,7 @@ const Particles = {
     new ParticleSystem({
       world,
       neon: true,
-      amount: 9,
+      amount: 3,
       radius: 3,
       color: {
         value: color(255, 255, 255),
@@ -48,7 +48,7 @@ const Particles = {
     new ParticleSystem({
       world,
       neon: true,
-      amount: 20,
+      amount: 5,
       radius: 8,
       color: color,
       particleLifetime: {
@@ -82,8 +82,8 @@ const Particles = {
     new ParticleSystem({
       world,
       neon: true,
-      amount: 20,
-      radius: 1,
+      amount: 3,
+      radius: 3,
       color: {
         value: color(255, 255, 255),
         to: color(255, 215, 0),

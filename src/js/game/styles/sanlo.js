@@ -131,6 +131,7 @@ const SanloStyles = {
   cannonParticles (game_obj, unitVector) {
     new ParticleSystem({
       world: game_obj.world,
+      amount: 1,
       radius: 3,
       color: {
         value: color(255, 255, 255),
@@ -155,7 +156,7 @@ const SanloStyles = {
     new ParticleSystem({
       world: game_obj.world,
       neon: true,
-      amount: 3,
+      amount: 1,
       radius: 6,
       color: {
         value: color(255, 255, 255),

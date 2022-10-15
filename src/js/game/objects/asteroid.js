@@ -346,43 +346,36 @@ class Asteroid extends GOB {
     try {
       if (this.resolved) return;
 
-
       let supersegments = segments.concat(segments);
       let new_asteroid_one = [];
       let new_asteroid_two = [];
-
       let i = 0;
       let segment = supersegments[i];
-      while (!segmentMatch(split_from.segment, segment)) {
-        ++i; // ignore everything until we get to the first point
+
+      const increment = () => {
+        ++i;
         if (i > supersegments.length) {
-          // console.log('split not found');
-          // debugger;
-          return;
+          console.log('split not found');
+          return null;
         }
-        segment = supersegments[i];
+        return supersegments[i];
+      }
+
+      while (!segmentMatch(split_from.segment, segment)) {
+        // ignore everything until we get to the first point
+        segment = increment();
+        if (!segment) return;
       }
       // First match against the "from" segment
       new_asteroid_one.push(split_from.point);
       new_asteroid_one.push(segment.p2);
-
-      ++i;
-      if (i > supersegments.length) {
-        // console.log('split not found');
-        // debugger;
-        return;
-      }
-      segment = supersegments[i];
+      segment = increment();
+      if (!segment) return;
 
       while (!segmentMatch(split_to.segment, segment)) {
         new_asteroid_one.push(segment.p2);
-        ++i;
-        if (i > supersegments.length) {
-          // console.log('split not found');
-          // debugger;
-          return;
-        }
-        segment = supersegments[i];
+        segment = increment();
+        if (!segment) return;
       }
 
       // First match against the "from" segment
@@ -391,23 +384,13 @@ class Asteroid extends GOB {
       new_asteroid_two.push(split_to.point);
       new_asteroid_two.push(segment.p2);
 
-      ++i;
-      if (i > supersegments.length) {
-        // console.log('split not found');
-        // debugger;
-        return;
-      }
-      segment = supersegments[i];
+      segment = increment();
+      if (!segment) return;
 
       while (!segmentMatch(split_from.segment, segment)) {
         new_asteroid_two.push(segment.p2);
-        ++i;
-        if (i > supersegments.length) {
-          // console.log('split not found');
-          // debugger;
-          return;
-        }
-        segment = supersegments[i];
+        segment = increment();
+        if (!segment) return;
       }
 
       // First match against the "from" segment
