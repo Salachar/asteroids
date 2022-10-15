@@ -48,12 +48,25 @@ const CollisionHelpers = {
     const lambda = ((to2.y - from2.y) * (to2.x - from1.x) + (from2.x - to2.x) * (to2.y - from1.y)) / determinant;
     const gamma = ((from1.y - to1.y) * (to2.x - from1.x) + dX * (to2.y - from1.y)) / determinant;
 
+    // // check if there is an intersection
+    // if (ray_to_segment) {
+    //   // if (info.t1 >= 0 && info.t2 >= 0 && info.t2 <= 1) {
+    //   if (lambda <= 0 || !(0 <= gamma && gamma <= 1)) return null;
+    // } else { // segment to segment
+    //   if (!(0 <= lambda && lambda <= 1) || !(0 <= gamma && gamma <= 1)) return null;
+    // }
+
+    const boundCheck = (value) => {
+      if (-0.01 <= value && value <= 1.01) return true;
+      return false;
+    };
+
     // check if there is an intersection
     if (ray_to_segment) {
       // if (info.t1 >= 0 && info.t2 >= 0 && info.t2 <= 1) {
-      if (lambda <= 0 || !(0 <= gamma && gamma <= 1)) return null;
+      if (lambda <= 0 || !boundCheck(gamma)) return null;
     } else { // segment to segment
-      if (!(0 <= lambda && lambda <= 1) || !(0 <= gamma && gamma <= 1)) return null;
+      if (!boundCheck(lambda) || !boundCheck(gamma)) return null;
     }
 
     return {

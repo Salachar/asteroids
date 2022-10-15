@@ -223,18 +223,20 @@ class GOB {
 
   checkCollision (this_segments_info) {
     if (!this.collidable) return;
-    GOM.collidable_objects.forEach((game_obj) => {
+    const length = GOM.collidable_objects.length;
+    for (let i = 0; i < length; ++i) {
+      const game_obj = GOM.collidable_objects[i];
       // Make sure objects ignore themselves
-      if (this.id === game_obj.id) return;
+      if (this.id === game_obj.id) continue;
       // For now projectiles don't intersect with each other
-      if (this.type === 'projectile' && game_obj.type === 'projectile') return;
-      if (this.type === 'asteroid' && game_obj.type === 'asteroid') return;
+      if (this.type === 'projectile' && game_obj.type === 'projectile') continue;
+      if (this.type === 'asteroid' && game_obj.type === 'asteroid') continue;
       // The player's own projectiles doesn't collide with themself
-      if (this.type === 'projectile' && game_obj.id === 'player' && this.spawner.id === 'player') return;
-      if (game_obj.type === 'projectile' && this.id === 'player' && game_obj.spawner.id === 'player') return;
+      if (this.type === 'projectile' && game_obj.id === 'player' && this.spawner.id === 'player') continue;
+      if (game_obj.type === 'projectile' && this.id === 'player' && game_obj.spawner.id === 'player') continue;
       // We have two objects that handle collision
       this.checkObjCollision(this_segments_info, game_obj);
-    });
+    }
 	}
 
   checkObjCollision (this_segments_info, game_obj) {
@@ -333,13 +335,13 @@ class GOB {
   checkWorldBounds () {
     let straddleList = '';
     const worldBounds = this.world.getBounds();
-    worldBounds.forEach((worldSegment) => {
+    for (let i = 0; i < worldBounds.length; ++i) {
+      const worldSegment = worldBounds[i];
       const { distance } = getPointDistance(this.center, worldSegment);
       if (typeof distance === 'number' && distance <= this.radius) {
         straddleList += `-${worldSegment.id}-`;
       }
-    });
-
+    }
     this.straddling = straddleList;
   }
 
@@ -569,9 +571,9 @@ class GOB {
     if (!nested) {
       this.drawSegmentList(this.context, list);
     } else {
-      list.forEach((subList) => {
-        this.drawSegmentList(this.context, subList);
-      });
+      for (let i = 0; i < list.length; ++i) {
+        this.drawSegmentList(this.context, list[i]);
+      }
     }
   }
 
@@ -595,9 +597,9 @@ class GOB {
         config = segmentsList.shift();
       }
 
-      segmentsList.forEach((segment) => {
-        callback(segment, config);
-      });
+      for (let i = 0; i < segmentsList.length; ++i) {
+        callback(segmentsList[i], config);
+      }
     }
 
     const degmentizeList = (segmentsInfo) => {
@@ -608,9 +610,9 @@ class GOB {
       if (!nested) {
         createSegmentObjectsFromList(list);
       } else {
-        list.forEach((subList) => {
-          createSegmentObjectsFromList(subList);
-        });
+        for (let i = 0; i < list.length; ++i) {
+          createSegmentObjectsFromList(list[i]);
+        }
       }
     }
 
@@ -657,9 +659,10 @@ class GOB {
     c.save();
       c.beginPath();
         c.moveTo(segments[0].p1.x, segments[0].p1.y);
-        segments.forEach((segment) => {
+        for (let i = 0; i < segments.length; ++i) {
+          const segment = segments[i];
           c.lineTo(segment.p2.x, segment.p2.y);
-        });
+        }
       c.closePath();
       neonStroke(c, config);
     c.restore();

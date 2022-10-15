@@ -8,20 +8,13 @@ const SanloStyles = require('../styles/sanlo');
 const FuturamaStyles = require('../styles/futurama');
 const ClassicStyles = require('../styles/classic');
 
-const AudioManager = require('audio-manager');
 const Projectile = require('./projectile');
 const Segment = require('./segment');
-
-// const thrusterSound = require('sounds/thrusters.mp3');
-// const laserSound = require('sounds/laser.mp3');
-// const explosionSound = require('sounds/explosion.mp3');
-// const goldSound = require('sounds/gold.mp3');
 
 const { PI, HALF_PI,
   clampRadians,
   getMagnitude,
   getUnitVector,
-  rotatePointCounterClockwise,
  } = require('math');
  const { getRandomUnitVector } = require('lib/random');
 
@@ -43,11 +36,9 @@ class Player extends GOB {
     if (this.invincible_time) {
       this.collidable = false;
       this.invincible = true;
-      // this.opacity = 0.5;
       window.setTimeout(() => {
         this.collidable = true;
         this.invincible = false;
-        // this.opacity = 1;
       }, this.invincible_time)
     }
 
@@ -57,29 +48,6 @@ class Player extends GOB {
       active: false,
       power: 0.085,
     };
-
-    // this.audioManager = new AudioManager({
-    //   thruster: {
-    //     src: thrusterSound,
-    //     loop: true,
-    //     volume: 0.65,
-    //   },
-    //   laser: {
-    //     src: laserSound,
-    //     loop: false,
-    //     volume: 0.03,
-    //   },
-    //   explosion: {
-    //     src: explosionSound,
-    //     loop: false,
-    //     volume: 0.2,
-    //   },
-    //   gold: {
-    //     src: goldSound,
-    //     loop: false,
-    //     volume: 0.2,
-    //   },
-    // })
 
     this.weaponFirable = true;
     this.weaponTimer = null;
@@ -187,11 +155,6 @@ class Player extends GOB {
       world: this.world,
       layer: GOM.front,
       spawner: this,
-      // spawn: rotatePointCounterClockwise(
-      //   this.uniquePoints.cannon,
-      //   this.theta,
-      //   this.getCenter(),
-      // ),
       spawn: this.getCenter(),
       baseVelocity: this.velocity,
       aim: playerHeadingVector,
@@ -228,7 +191,6 @@ class Player extends GOB {
     const { other_obj } = collision_data;
     if (other_obj.type === 'asteroid') {
       if (other_obj.radius <= this.radius) {
-        // this.world.audioManager.pauseAll().playOnce("gold");
         this.world.audioManager.playOnce("gold");
         Particles.pickupGoldParticles({
           world: this.world,
@@ -260,7 +222,6 @@ class Player extends GOB {
 
         this.world.handlePlayerDeath();
         // Pause all playing audio (mainly thrusters)
-        // this.world.audioManager.pauseAll().playOnce("explosion");
         this.world.audioManager.players.thruster.pause();
         this.world.audioManager.playOnce("explosion");
         // Don't render the player anymore. If I go with the
@@ -286,7 +247,6 @@ class Player extends GOB {
           0,
           2 * Math.PI
         );
-        // redStroke(c);
         c.closePath();
         c.globalAlpha = 0.25;
         c.fillStyle = '#FFFFFF';

@@ -406,18 +406,20 @@ class GOB {
 
   checkCollision (this_segments_info) {
     if (!this.collidable) return;
-    GOM.collidable_objects.forEach((game_obj) => {
+    const length = GOM.collidable_objects.length;
+    for (let i = 0; i < length; ++i) {
+      const game_obj = GOM.collidable_objects[i];
       // Make sure objects ignore themselves
-      if (this.id === game_obj.id) return;
+      if (this.id === game_obj.id) continue;
       // For now projectiles don't intersect with each other
-      if (this.type === 'projectile' && game_obj.type === 'projectile') return;
-      if (this.type === 'asteroid' && game_obj.type === 'asteroid') return;
+      if (this.type === 'projectile' && game_obj.type === 'projectile') continue;
+      if (this.type === 'asteroid' && game_obj.type === 'asteroid') continue;
       // The player's own projectiles doesn't collide with themself
-      if (this.type === 'projectile' && game_obj.id === 'player' && this.spawner.id === 'player') return;
-      if (game_obj.type === 'projectile' && this.id === 'player' && game_obj.spawner.id === 'player') return;
+      if (this.type === 'projectile' && game_obj.id === 'player' && this.spawner.id === 'player') continue;
+      if (game_obj.type === 'projectile' && this.id === 'player' && game_obj.spawner.id === 'player') continue;
       // We have two objects that handle collision
       this.checkObjCollision(this_segments_info, game_obj);
-    });
+    }
 	}
 
   checkObjCollision (this_segments_info, game_obj) {
@@ -516,13 +518,13 @@ class GOB {
   checkWorldBounds () {
     let straddleList = '';
     const worldBounds = this.world.getBounds();
-    worldBounds.forEach((worldSegment) => {
+    for (let i = 0; i < worldBounds.length; ++i) {
+      const worldSegment = worldBounds[i];
       const { distance } = getPointDistance(this.center, worldSegment);
       if (typeof distance === 'number' && distance <= this.radius) {
         straddleList += `-${worldSegment.id}-`;
       }
-    });
-
+    }
     this.straddling = straddleList;
   }
 
@@ -752,9 +754,9 @@ class GOB {
     if (!nested) {
       this.drawSegmentList(this.context, list);
     } else {
-      list.forEach((subList) => {
-        this.drawSegmentList(this.context, subList);
-      });
+      for (let i = 0; i < list.length; ++i) {
+        this.drawSegmentList(this.context, list[i]);
+      }
     }
   }
 
@@ -778,9 +780,9 @@ class GOB {
         config = segmentsList.shift();
       }
 
-      segmentsList.forEach((segment) => {
-        callback(segment, config);
-      });
+      for (let i = 0; i < segmentsList.length; ++i) {
+        callback(segmentsList[i], config);
+      }
     }
 
     const degmentizeList = (segmentsInfo) => {
@@ -791,9 +793,9 @@ class GOB {
       if (!nested) {
         createSegmentObjectsFromList(list);
       } else {
-        list.forEach((subList) => {
-          createSegmentObjectsFromList(subList);
-        });
+        for (let i = 0; i < list.length; ++i) {
+          createSegmentObjectsFromList(list[i]);
+        }
       }
     }
 
@@ -840,9 +842,10 @@ class GOB {
     c.save();
       c.beginPath();
         c.moveTo(segments[0].p1.x, segments[0].p1.y);
-        segments.forEach((segment) => {
+        for (let i = 0; i < segments.length; ++i) {
+          const segment = segments[i];
           c.lineTo(segment.p2.x, segment.p2.y);
-        });
+        }
       c.closePath();
       neonStroke(c, config);
     c.restore();
@@ -1244,6 +1247,138 @@ module.exports = new Menu();
 
 /***/ }),
 
+/***/ 735:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+const GOM = __webpack_require__(39);
+const GOB = __webpack_require__(406);
+const CONFIG = __webpack_require__(78);
+
+const { style } = __webpack_require__(391);
+const { sqr, getDistance } = __webpack_require__(488);;
+const { RGBA } = __webpack_require__(293);
+const { getRandom } = __webpack_require__(66);
+
+class Anomaly extends GOB {
+	constructor (opts = {}) {
+    super({
+      ...opts,
+      type: 'anomaly',
+      renderType: 'css',
+    });
+
+    this.x = getRandom(0, this.world.width);
+    this.y = getRandom(0, this.world.height);
+    this.width = 1000;
+    this.height = 1000;
+
+		this.z = 1;
+		this.radius = 10000; // opts.radius || 0;
+		this.force = 100;
+		this.forceDirection = 1;
+
+    // .blackhole {
+    //   width: 10em;
+    //   height: 10em;
+    // }
+
+    // .megna {
+    //   width: 100%;
+    //   height: 100%;
+    //   border-radius: 100%;
+    //   background: linear-gradient(#ff4500, #ff4500, #ff9900);
+    //   box-shadow:
+    //     0 0 60px 30px #fcbd3e,
+    //     0 0 100px 60px #fd7a4d,
+    //     0 0 140px 90px #ff0b6b;
+    //   display: flex;
+    //   justify-content: center;
+    //   align-items: center;
+    //   filter: blur(5px);
+    // }
+
+    // .black {
+    //   width: 90%;
+    //   height: 90%;
+    //   border-radius: 50% 50% 50% 50%;
+    //   background-color: black;
+    //   transform: rotate(0deg);
+    // }
+
+    // 'left': `${getRandom(0, 100)}%`,
+    // 'top': `${getRandom(0, 100)}%`,
+
+    this.htmlElement = style({
+      'left': `${this.x}px`,
+      'top': `${this.y}px`,
+      'position': 'absolute',
+      'width': '120px',
+      'height': '120px',
+      'transform': 'translateX(-50%) translateY(-50%)',
+    }, 'blackhole');
+
+    this.subElementMegna = style({
+      'width': '100%',
+      'height': '100%',
+      'border-radius': '100%',
+      'background': 'linear-gradient(#ff4500, #ff4500, #ff9900)',
+      'box-shadow': `
+        0 0 60px 30px #fcbd3e,
+        0 0 100px 60px #fd7a4d,
+        0 0 140px 90px #ff0b6b`,
+      'display': 'flex',
+      'justify-content': 'center',
+      'align-items': 'center',
+      'filter': 'blur(5px)',
+    }, 'megna');
+
+    this.subElementBlack = style({
+      'width': '90%',
+      'height': '90%',
+      'border-radius': '50% 50% 50% 50%',
+      'background-color': 'black',
+      'transform': 'rotate(0deg)',
+    }, 'black');
+
+    this.subElementMegna.appendChild(this.subElementBlack);
+    this.htmlElement.appendChild(this.subElementMegna);
+    GOM.canvas_container_bkg.appendChild(this.htmlElement);
+
+		return this;
+	}
+
+	update () {
+    // console.log('blackhold update');
+		for (var i = 0; i < GOM.game_objects.length; ++i) {
+			var obj = GOM.game_objects[i];
+      // TODO This needs to affect the player as well, pretty much anything except
+      // other anomalies I think
+			if (obj.type === "projectile" || obj.type === 'asteroid' || obj.type === 'ship') {
+        // console.log('butt')
+				var xDis = this.x - obj.center.x;
+				var yDis = this.y - obj.center.y;
+				var dist = sqr(xDis) + sqr(yDis);
+				if (dist < sqr(this.radius) && dist > sqr(120)) {
+					if (dist < 2) {
+            console.log('bad touch');
+						// obj.shutdown();
+					} else {
+						dist = Math.sqrt(dist);
+						var force = this.forceDirection * (((this.radius / dist) * (this.radius / dist)) / (this.radius * (this.force / 10)));
+						obj.velocity.x = (obj.velocity.x + ((xDis / dist) * force));
+						obj.velocity.y = (obj.velocity.y + ((yDis / dist) * force));
+					}
+				}
+			}
+		}
+	}
+}
+
+module.exports = Anomaly;
+
+
+/***/ }),
+
 /***/ 712:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
@@ -1256,7 +1391,7 @@ const Particles = __webpack_require__(349);
 const { color } = __webpack_require__(293);
 
 const { coinFlip, getRandom, getRandomInt, getPercentileRoll } = __webpack_require__(66);
-const { TWO_PI, PI, segmentMatch, clampRadians, rotatePointClockwise, rotatePointCounterClockwise, getMagnitude } = __webpack_require__(488);
+const { TWO_PI, PI, pointMatch, segmentMatch, clampRadians, rotatePointClockwise, rotatePointCounterClockwise, getMagnitude } = __webpack_require__(488);
 const { checkRaySegmentIntersection } = __webpack_require__(90);
 const AudioManager = __webpack_require__(330);
 
@@ -1272,22 +1407,14 @@ class Asteroid extends GOB {
     this.radius = opts.radius || 150;
     this.rotationSpeed = opts.rotationSpeed || (PI / 480);
     this.owner_size = opts.owner_size || 'big';
+
     // Custom
     this.points = opts.points || null;
     this.translated_points = null;
-    if (this.points && this.points.length) {
-      this.calculateBaseProps();
-    }
+    this.breakoff = opts.breakoff || false;
 
-    // this.audioManager = new AudioManager({
-    //   thud: {
-    //     src: thudSound,
-    //     loop: false,
-    //     volume: 0.3,
-    //   },
-    // })
-
-    this.generateSegments();
+    if (this.breakoff) this.calculateBaseProps();
+    if (!this.remove) this.generateSegments();
     return this;
 	}
 
@@ -1299,6 +1426,10 @@ class Asteroid extends GOB {
     // go through all the points,
     // The new points need to be described according to the asteroids "(0, 0)"
 
+    if (!this.points.length) {
+      this.explodeAsteroid();
+    }
+
     let bounds = {
       t: null,
       r: null,
@@ -1306,12 +1437,19 @@ class Asteroid extends GOB {
       l: null,
     };
 
-    this.points.forEach((point) => {
+    for (let i = 0; i < this.points.length; ++i) {
+      const point = this.points[i];
+
+      const nextPoint = this.points[i + 1] || this.points[0];
+      if (pointMatch(point, nextPoint, 1)) {
+        return this.explodeAsteroid();
+      }
+
       if (!bounds.t || point.y < bounds.t) bounds.t = point.y;
       if (!bounds.b || point.y > bounds.b) bounds.b = point.y;
       if (!bounds.r || point.x > bounds.r) bounds.r = point.x;
       if (!bounds.l || point.x < bounds.l) bounds.l = point.x;
-    });
+    }
 
     this.x = bounds.l;
     this.y = bounds.t;
@@ -1340,22 +1478,31 @@ class Asteroid extends GOB {
       });
     });
 
-    if (this.radius < (this.world.player.radius / 3)) {
-      Particles.asteroidExplosionParticles({
-        world: this.world,
-        direction: 'circular',
-        spawn: this.center,
-        color: this.owner_size === 'small' ? {
-          value: color(255, 255, 255),
-          to: color(255, 215, 0),
-        } :  {
-          value: color(255, 255, 255),
-          to: color(213, 72, 168),
-        },
-      });
-
-      this.shutdown();
+    if (!this.translated_points.length) {
+      return this.explodeAsteroid();
     }
+
+    if (this.radius < (this.world.player.radius / 3)) {
+      return this.explodeAsteroid();
+    }
+  }
+
+  explodeAsteroid () {
+    Particles.asteroidExplosionParticles({
+      world: this.world,
+      direction: 'circular',
+      spawn: this.center,
+      color: this.owner_size === 'small' ? {
+        value: color(255, 255, 255),
+        to: color(255, 215, 0),
+      } :  {
+        value: color(255, 255, 255),
+        to: color(213, 72, 168),
+      },
+    });
+
+    this.shutdown();
+    return this;
   }
 
   getSegmentStyle () {
@@ -1379,13 +1526,12 @@ class Asteroid extends GOB {
       this.segmentsList = this.createSegments([this.getSegmentStyle()].concat(this.translated_points));
     } else {
       this.segmentsList = this.generateRadialSegments();
+      // if (coinFlip()) {
+      //   this.generateQuadAsteroid();
+      // } else {
+      //   this.segmentsList = this.generateRadialSegments();
+      // }
     }
-
-    // if (coinFlip()) {
-    //   this.generateQuadAsteroid();
-    // } else {
-    //   this.segmentsList = this.generateRadialSegments();
-    // }
   }
 
   generateQuadAsteroid () {
@@ -1470,13 +1616,7 @@ class Asteroid extends GOB {
 	}
 
   resolveCollision (collision_point, collision_data) {
-    const {
-      this_segment,
-      other_segment,
-      tli,
-      tlsi,
-      other_obj,
-    } = collision_data;
+    const {this_segment, other_obj } = collision_data;
 
     if (other_obj.id === 'player') {
       if (this.radius <= other_obj.radius) {
@@ -1505,7 +1645,10 @@ class Asteroid extends GOB {
         if (this_nested) {
           for (let j = 0; j < this_item.length; ++j) {
             // Don't test the segment that was hit
-            if (segmentMatch(this_segment, this_item[i])) continue;
+            if (segmentMatch(this_segment, this_item[i])) {
+              continue;
+            }
+
             const second_split_point = checkRaySegmentIntersection({
               ray: {
                 p1: first_split_point,
@@ -1518,6 +1661,8 @@ class Asteroid extends GOB {
             });
             if (second_split_point) {
               this.splitAsteroid({
+                collision_point,
+                projectile: other_obj,
                 split_from: {
                   point: first_split_point,
                   segment: this_segment,
@@ -1533,7 +1678,9 @@ class Asteroid extends GOB {
           }
         } else {
           // Don't test the segment that was hit
-          if (segmentMatch(this_segment, this_item)) continue;
+          if (segmentMatch(this_segment, this_item)) {
+            continue;
+          }
 
           const second_split_point = checkRaySegmentIntersection({
             ray: {
@@ -1557,7 +1704,7 @@ class Asteroid extends GOB {
                 point: second_split_point,
                 segment: this_item,
               },
-              segments: this_segments.list,
+              segments: this_list,
               collision_data,
             });
           }
@@ -1572,7 +1719,6 @@ class Asteroid extends GOB {
       projectile,
       split_from = {},
       split_to = {},
-      //
       segments = [],
       collision_data = {},
     } = data;
@@ -1580,7 +1726,9 @@ class Asteroid extends GOB {
       other_obj,
     } = collision_data;
 
-    if (segmentMatch(split_from.segment, split_to.segment)) return;
+    if (segmentMatch(split_from.segment, split_to.segment)) {
+      return;
+    }
 
     this.world.audioManager.playOnce("thud", {
       no_ramp_up: true,
@@ -1604,7 +1752,6 @@ class Asteroid extends GOB {
       const increment = () => {
         ++i;
         if (i > supersegments.length) {
-          console.log('split not found');
           return null;
         }
         return supersegments[i];
@@ -1662,6 +1809,7 @@ class Asteroid extends GOB {
         },
         rotationSpeed: (PI / 480),
         owner_size: (this.radius > this.world.player.radius) ? 'big' : 'small',
+        breakoff: true,
       })
 
       const right_aim = rotatePointClockwise(other_obj.aim, 0.5);
@@ -1678,6 +1826,7 @@ class Asteroid extends GOB {
         },
         rotationSpeed: -(PI / 480),
         owner_size: (this.radius > this.world.player.radius) ? 'big' : 'small',
+        breakoff: true,
       });
 
       this.shutdown();
@@ -2076,20 +2225,13 @@ const SanloStyles = __webpack_require__(868);
 const FuturamaStyles = __webpack_require__(897);
 const ClassicStyles = __webpack_require__(194);
 
-const AudioManager = __webpack_require__(330);
 const Projectile = __webpack_require__(700);
 const Segment = __webpack_require__(394);
-
-// const thrusterSound = require('sounds/thrusters.mp3');
-// const laserSound = require('sounds/laser.mp3');
-// const explosionSound = require('sounds/explosion.mp3');
-// const goldSound = require('sounds/gold.mp3');
 
 const { PI, HALF_PI,
   clampRadians,
   getMagnitude,
   getUnitVector,
-  rotatePointCounterClockwise,
  } = __webpack_require__(488);
  const { getRandomUnitVector } = __webpack_require__(66);
 
@@ -2111,11 +2253,9 @@ class Player extends GOB {
     if (this.invincible_time) {
       this.collidable = false;
       this.invincible = true;
-      // this.opacity = 0.5;
       window.setTimeout(() => {
         this.collidable = true;
         this.invincible = false;
-        // this.opacity = 1;
       }, this.invincible_time)
     }
 
@@ -2125,29 +2265,6 @@ class Player extends GOB {
       active: false,
       power: 0.085,
     };
-
-    // this.audioManager = new AudioManager({
-    //   thruster: {
-    //     src: thrusterSound,
-    //     loop: true,
-    //     volume: 0.65,
-    //   },
-    //   laser: {
-    //     src: laserSound,
-    //     loop: false,
-    //     volume: 0.03,
-    //   },
-    //   explosion: {
-    //     src: explosionSound,
-    //     loop: false,
-    //     volume: 0.2,
-    //   },
-    //   gold: {
-    //     src: goldSound,
-    //     loop: false,
-    //     volume: 0.2,
-    //   },
-    // })
 
     this.weaponFirable = true;
     this.weaponTimer = null;
@@ -2255,11 +2372,6 @@ class Player extends GOB {
       world: this.world,
       layer: GOM.front,
       spawner: this,
-      // spawn: rotatePointCounterClockwise(
-      //   this.uniquePoints.cannon,
-      //   this.theta,
-      //   this.getCenter(),
-      // ),
       spawn: this.getCenter(),
       baseVelocity: this.velocity,
       aim: playerHeadingVector,
@@ -2296,7 +2408,6 @@ class Player extends GOB {
     const { other_obj } = collision_data;
     if (other_obj.type === 'asteroid') {
       if (other_obj.radius <= this.radius) {
-        // this.world.audioManager.pauseAll().playOnce("gold");
         this.world.audioManager.playOnce("gold");
         Particles.pickupGoldParticles({
           world: this.world,
@@ -2328,7 +2439,6 @@ class Player extends GOB {
 
         this.world.handlePlayerDeath();
         // Pause all playing audio (mainly thrusters)
-        // this.world.audioManager.pauseAll().playOnce("explosion");
         this.world.audioManager.players.thruster.pause();
         this.world.audioManager.playOnce("explosion");
         // Don't render the player anymore. If I go with the
@@ -2354,7 +2464,6 @@ class Player extends GOB {
           0,
           2 * Math.PI
         );
-        // redStroke(c);
         c.closePath();
         c.globalAlpha = 0.25;
         c.fillStyle = '#FFFFFF';
@@ -2610,6 +2719,8 @@ const Sun = __webpack_require__(642);
 const Void = __webpack_require__(24);
 const ShootingStars = __webpack_require__(527);
 
+const Anomaly = __webpack_require__(735);
+
 const {
   getRandom,
   getRandomInt,
@@ -2710,6 +2821,8 @@ class World extends GOB {
       this.background_objects.push(
         new ShootingStars({ world: this })
       );
+
+      new Anomaly({ world: this })
     }
 
     spawnPlayer (params = {}) {
@@ -3595,12 +3708,25 @@ const CollisionHelpers = {
     const lambda = ((to2.y - from2.y) * (to2.x - from1.x) + (from2.x - to2.x) * (to2.y - from1.y)) / determinant;
     const gamma = ((from1.y - to1.y) * (to2.x - from1.x) + dX * (to2.y - from1.y)) / determinant;
 
+    // // check if there is an intersection
+    // if (ray_to_segment) {
+    //   // if (info.t1 >= 0 && info.t2 >= 0 && info.t2 <= 1) {
+    //   if (lambda <= 0 || !(0 <= gamma && gamma <= 1)) return null;
+    // } else { // segment to segment
+    //   if (!(0 <= lambda && lambda <= 1) || !(0 <= gamma && gamma <= 1)) return null;
+    // }
+
+    const boundCheck = (value) => {
+      if (-0.01 <= value && value <= 1.01) return true;
+      return false;
+    };
+
     // check if there is an intersection
     if (ray_to_segment) {
       // if (info.t1 >= 0 && info.t2 >= 0 && info.t2 <= 1) {
-      if (lambda <= 0 || !(0 <= gamma && gamma <= 1)) return null;
+      if (lambda <= 0 || !boundCheck(gamma)) return null;
     } else { // segment to segment
-      if (!(0 <= lambda && lambda <= 1) || !(0 <= gamma && gamma <= 1)) return null;
+      if (!boundCheck(lambda) || !boundCheck(gamma)) return null;
     }
 
     return {
@@ -4169,11 +4295,12 @@ module.exports = ColorHelpers;
 const { hypenToCamelCase } = __webpack_require__(521);
 
 const DomHelpers = {
-  style: (styles) => {
+  style: (styles, className) => {
     const htmlElement = document.createElement('div');
     Object.keys(styles).forEach((styleKey) => {
       htmlElement.style[hypenToCamelCase(styleKey)] = styles[styleKey];
     });
+    if (className) htmlElement.classList.add(className);
     return htmlElement;
   },
 }
@@ -4273,9 +4400,9 @@ const MathHelpers = {
   segmentMatch: (s1, s2) => {
     if (!s1 || !s2) return;
     // p1 and p2 match
-    if (pointMatch(s1.p1, s2.p1, 2) && pointMatch(s1.p2, s2.p2, 2)) return true;
+    if (pointMatch(s1.p1, s2.p1, 0.5) && pointMatch(s1.p2, s2.p2, 0.5)) return true;
     // opposites match (p1 = p2, p2 = p1)
-    if (pointMatch(s1.p1, s2.p2, 2) && pointMatch(s1.p2, s2.p1, 2)) return true;
+    if (pointMatch(s1.p1, s2.p2, 0.5) && pointMatch(s1.p2, s2.p1, 0.5)) return true;
     return false;
   },
 

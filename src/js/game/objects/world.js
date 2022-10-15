@@ -7,14 +7,16 @@ const AudioManager = require('audio-manager');
 
 const Segment = require('segment');
 
-const Player = require('game/objects/player');
-const Asteroid = require('game/objects/asteroid');
+const Player = require('./player');
+const Asteroid = require('./asteroid');
 
-const Nebula = require('game/objects/background/nebula');
-const Planet = require('game/objects/background/planet');
-const Sun = require('game/objects/background/sun');
-const Void = require('game/objects/background/void');
-const ShootingStars = require('game/objects/background/shooting-stars');
+const Nebula = require('./background/nebula');
+const Planet = require('./background/planet');
+const Sun = require('./background/sun');
+const Void = require('./background/void');
+const ShootingStars = require('./background/shooting-stars');
+
+const Anomaly = require('./anomaly');
 
 const {
   getRandom,
@@ -116,6 +118,8 @@ class World extends GOB {
       this.background_objects.push(
         new ShootingStars({ world: this })
       );
+
+      new Anomaly({ world: this })
     }
 
     spawnPlayer (params = {}) {

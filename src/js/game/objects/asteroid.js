@@ -7,7 +7,7 @@ const Particles = require('../styles/particles');
 const { color } = require('lib/color');
 
 const { coinFlip, getRandom, getRandomInt, getPercentileRoll } = require('lib/random');
-const { TWO_PI, PI, segmentMatch, clampRadians, rotatePointClockwise, rotatePointCounterClockwise, getMagnitude } = require('math');
+const { TWO_PI, PI, pointMatch, segmentMatch, clampRadians, rotatePointClockwise, rotatePointCounterClockwise, getMagnitude } = require('math');
 const { checkRaySegmentIntersection } = require('lib/collision');
 const AudioManager = require('audio-manager');
 
@@ -23,22 +23,14 @@ class Asteroid extends GOB {
     this.radius = opts.radius || 150;
     this.rotationSpeed = opts.rotationSpeed || (PI / 480);
     this.owner_size = opts.owner_size || 'big';
+
     // Custom
     this.points = opts.points || null;
     this.translated_points = null;
-    if (this.points && this.points.length) {
-      this.calculateBaseProps();
-    }
+    this.breakoff = opts.breakoff || false;
 
-    // this.audioManager = new AudioManager({
-    //   thud: {
-    //     src: thudSound,
-    //     loop: false,
-    //     volume: 0.3,
-    //   },
-    // })
-
-    this.generateSegments();
+    if (this.breakoff) this.calculateBaseProps();
+    if (!this.remove) this.generateSegments();
     return this;
 	}
 
@@ -50,6 +42,10 @@ class Asteroid extends GOB {
     // go through all the points,
     // The new points need to be described according to the asteroids "(0, 0)"
 
+    if (!this.points.length) {
+      this.explodeAsteroid();
+    }
+
     let bounds = {
       t: null,
       r: null,
@@ -57,12 +53,19 @@ class Asteroid extends GOB {
       l: null,
     };
 
-    this.points.forEach((point) => {
+    for (let i = 0; i < this.points.length; ++i) {
+      const point = this.points[i];
+
+      const nextPoint = this.points[i + 1] || this.points[0];
+      if (pointMatch(point, nextPoint, 1)) {
+        return this.explodeAsteroid();
+      }
+
       if (!bounds.t || point.y < bounds.t) bounds.t = point.y;
       if (!bounds.b || point.y > bounds.b) bounds.b = point.y;
       if (!bounds.r || point.x > bounds.r) bounds.r = point.x;
       if (!bounds.l || point.x < bounds.l) bounds.l = point.x;
-    });
+    }
 
     this.x = bounds.l;
     this.y = bounds.t;
@@ -91,22 +94,31 @@ class Asteroid extends GOB {
       });
     });
 
-    if (this.radius < (this.world.player.radius / 3)) {
-      Particles.asteroidExplosionParticles({
-        world: this.world,
-        direction: 'circular',
-        spawn: this.center,
-        color: this.owner_size === 'small' ? {
-          value: color(255, 255, 255),
-          to: color(255, 215, 0),
-        } :  {
-          value: color(255, 255, 255),
-          to: color(213, 72, 168),
-        },
-      });
-
-      this.shutdown();
+    if (!this.translated_points.length) {
+      return this.explodeAsteroid();
     }
+
+    if (this.radius < (this.world.player.radius / 3)) {
+      return this.explodeAsteroid();
+    }
+  }
+
+  explodeAsteroid () {
+    Particles.asteroidExplosionParticles({
+      world: this.world,
+      direction: 'circular',
+      spawn: this.center,
+      color: this.owner_size === 'small' ? {
+        value: color(255, 255, 255),
+        to: color(255, 215, 0),
+      } :  {
+        value: color(255, 255, 255),
+        to: color(213, 72, 168),
+      },
+    });
+
+    this.shutdown();
+    return this;
   }
 
   getSegmentStyle () {
@@ -130,13 +142,12 @@ class Asteroid extends GOB {
       this.segmentsList = this.createSegments([this.getSegmentStyle()].concat(this.translated_points));
     } else {
       this.segmentsList = this.generateRadialSegments();
+      // if (coinFlip()) {
+      //   this.generateQuadAsteroid();
+      // } else {
+      //   this.segmentsList = this.generateRadialSegments();
+      // }
     }
-
-    // if (coinFlip()) {
-    //   this.generateQuadAsteroid();
-    // } else {
-    //   this.segmentsList = this.generateRadialSegments();
-    // }
   }
 
   generateQuadAsteroid () {
@@ -221,13 +232,7 @@ class Asteroid extends GOB {
 	}
 
   resolveCollision (collision_point, collision_data) {
-    const {
-      this_segment,
-      other_segment,
-      tli,
-      tlsi,
-      other_obj,
-    } = collision_data;
+    const {this_segment, other_obj } = collision_data;
 
     if (other_obj.id === 'player') {
       if (this.radius <= other_obj.radius) {
@@ -256,7 +261,10 @@ class Asteroid extends GOB {
         if (this_nested) {
           for (let j = 0; j < this_item.length; ++j) {
             // Don't test the segment that was hit
-            if (segmentMatch(this_segment, this_item[i])) continue;
+            if (segmentMatch(this_segment, this_item[i])) {
+              continue;
+            }
+
             const second_split_point = checkRaySegmentIntersection({
               ray: {
                 p1: first_split_point,
@@ -269,6 +277,8 @@ class Asteroid extends GOB {
             });
             if (second_split_point) {
               this.splitAsteroid({
+                collision_point,
+                projectile: other_obj,
                 split_from: {
                   point: first_split_point,
                   segment: this_segment,
@@ -284,7 +294,9 @@ class Asteroid extends GOB {
           }
         } else {
           // Don't test the segment that was hit
-          if (segmentMatch(this_segment, this_item)) continue;
+          if (segmentMatch(this_segment, this_item)) {
+            continue;
+          }
 
           const second_split_point = checkRaySegmentIntersection({
             ray: {
@@ -308,7 +320,7 @@ class Asteroid extends GOB {
                 point: second_split_point,
                 segment: this_item,
               },
-              segments: this_segments.list,
+              segments: this_list,
               collision_data,
             });
           }
@@ -323,7 +335,6 @@ class Asteroid extends GOB {
       projectile,
       split_from = {},
       split_to = {},
-      //
       segments = [],
       collision_data = {},
     } = data;
@@ -331,7 +342,9 @@ class Asteroid extends GOB {
       other_obj,
     } = collision_data;
 
-    if (segmentMatch(split_from.segment, split_to.segment)) return;
+    if (segmentMatch(split_from.segment, split_to.segment)) {
+      return;
+    }
 
     this.world.audioManager.playOnce("thud", {
       no_ramp_up: true,
@@ -355,7 +368,6 @@ class Asteroid extends GOB {
       const increment = () => {
         ++i;
         if (i > supersegments.length) {
-          console.log('split not found');
           return null;
         }
         return supersegments[i];
@@ -413,6 +425,7 @@ class Asteroid extends GOB {
         },
         rotationSpeed: (PI / 480),
         owner_size: (this.radius > this.world.player.radius) ? 'big' : 'small',
+        breakoff: true,
       })
 
       const right_aim = rotatePointClockwise(other_obj.aim, 0.5);
@@ -429,6 +442,7 @@ class Asteroid extends GOB {
         },
         rotationSpeed: -(PI / 480),
         owner_size: (this.radius > this.world.player.radius) ? 'big' : 'small',
+        breakoff: true,
       });
 
       this.shutdown();
